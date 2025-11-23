@@ -98,6 +98,8 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
 
     # clamp to bit ranges (safety)
     fa = max(0, min(fa, 1023))
+    if fa == 0:
+        print(fa)
     fb = max(0, min(fb, 1023))
     dt = max(0, min(dt, 4095))
 
@@ -287,8 +289,8 @@ def main():
         os.makedirs('imgs', exist_ok=True)
         plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
-    save_db(DB_PATH, hash_table)
-    save_db(SONGS_DB_PATH, song_table)
+    #save_db(DB_PATH, hash_table)
+    #save_db(SONGS_DB_PATH, song_table)
 
 
 if __name__ == '__main__':

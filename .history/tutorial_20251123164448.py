@@ -287,8 +287,8 @@ def main():
         os.makedirs('imgs', exist_ok=True)
         plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
-    save_db(DB_PATH, hash_table)
-    save_db(SONGS_DB_PATH, song_table)
+    #save_db(DB_PATH, hash_table)
+    #save_db(SONGS_DB_PATH, song_table)
 
 
 if __name__ == '__main__':

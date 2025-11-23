@@ -190,7 +190,8 @@ def find_peaks(spectrogram, bands):
             # find index of maximum inside the band
             local_idx = np.argmax(band_slice)
             global_idx = f_lo + local_idx  # convert back to absolute freq bin
-
+            if global_idx == 0:
+                raise ValueError("Found peak at 0 Hz, which is likely an error.")
             amp = band_slice[local_idx]
             peaks.append((t, global_idx, amp))
             
@@ -287,8 +288,8 @@ def main():
         os.makedirs('imgs', exist_ok=True)
         plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
-    save_db(DB_PATH, hash_table)
-    save_db(SONGS_DB_PATH, song_table)
+    #save_db(DB_PATH, hash_table)
+    #save_db(SONGS_DB_PATH, song_table)
 
 
 if __name__ == '__main__':

@@ -91,6 +91,8 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
         f_anchor, f_target < 1024
         dt < 4096
     """
+    if f_anchor == 0: 
+        raise ValueError("SFACCIMM")
     # fuzzy quantization (error-correction)
     fa = _quantize(f_anchor, fuzz)
     fb = _quantize(f_target, fuzz)
@@ -127,7 +129,8 @@ def build_hashes(
 
     for i in range(n_peaks):
         t_a, f_a, amp_a = peaks[i]
-        
+        if f_a == 0:
+            raise ValueError("Anchor peak at 0 Hz, likely an error.")
         if freq_band_hz is not None: 
             delta_f = freq_band_hz[0] + freq_band_hz[1] * freqs[f_a]
         # Collect candidates in the target zone ahead of this anchor
@@ -190,7 +193,8 @@ def find_peaks(spectrogram, bands):
             # find index of maximum inside the band
             local_idx = np.argmax(band_slice)
             global_idx = f_lo + local_idx  # convert back to absolute freq bin
-
+            if global_idx == 0:
+                raise ValueError("Found peak at 0 Hz, which is likely an error.")
             amp = band_slice[local_idx]
             peaks.append((t, global_idx, amp))
             

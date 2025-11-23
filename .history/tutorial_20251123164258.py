@@ -101,6 +101,10 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
     fb = max(0, min(fb, 1023))
     dt = max(0, min(dt, 4095))
 
+    if fa==0:
+        print(fa)
+        raise ValueError('booooo so stanco')
+
     # bit pack: fa[31:22], fb[21:12], dt[11:0]
     return (fa << 22) | (fb << 12) | dt
 
@@ -127,7 +131,8 @@ def build_hashes(
 
     for i in range(n_peaks):
         t_a, f_a, amp_a = peaks[i]
-        
+        if f_a == 0:
+            raise ValueError("Anchor peak at 0 Hz, likely an error.")
         if freq_band_hz is not None: 
             delta_f = freq_band_hz[0] + freq_band_hz[1] * freqs[f_a]
         # Collect candidates in the target zone ahead of this anchor
@@ -190,7 +195,8 @@ def find_peaks(spectrogram, bands):
             # find index of maximum inside the band
             local_idx = np.argmax(band_slice)
             global_idx = f_lo + local_idx  # convert back to absolute freq bin
-
+            if global_idx == 0:
+                raise ValueError("Found peak at 0 Hz, which is likely an error.")
             amp = band_slice[local_idx]
             peaks.append((t, global_idx, amp))
             
@@ -287,8 +293,8 @@ def main():
         os.makedirs('imgs', exist_ok=True)
         plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
-    save_db(DB_PATH, hash_table)
-    save_db(SONGS_DB_PATH, song_table)
+    #save_db(DB_PATH, hash_table)
+    #save_db(SONGS_DB_PATH, song_table)
 
 
 if __name__ == '__main__':

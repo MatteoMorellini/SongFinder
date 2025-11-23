@@ -21,7 +21,7 @@ PLOT_SPECTROGRAM = False
 # Define frequency bands (in terms of frequency bin indices)
 # n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
 bands = [
-    (1, 10),      # very low
+    (0, 10),      # very low
     (11, 20),     # low
     (21, 40),     # low-mid
     (41, 80),     # mid
@@ -69,7 +69,6 @@ def add_hashes_to_table(table, fingerprints):
 
     for h, song_id, t_anchor in fingerprints:
         h = np.uint32(h)
-        
         if h not in table:
             table[h] = [(song_id, t_anchor)]
         else:
@@ -127,7 +126,6 @@ def build_hashes(
 
     for i in range(n_peaks):
         t_a, f_a, amp_a = peaks[i]
-        
         if freq_band_hz is not None: 
             delta_f = freq_band_hz[0] + freq_band_hz[1] * freqs[f_a]
         # Collect candidates in the target zone ahead of this anchor
@@ -254,8 +252,9 @@ def main():
     # 1. load or create fingerprint and songs DBs
     hash_table = load_db(DB_PATH)
     song_table = load_db(SONGS_DB_PATH)
-
-    songs = ['veridisquo', 'isthisit', 'foremma', 'osakablues']
+    print(song_table)
+    print(hash_table[0])
+    songs = ['veridisquo', 'isthisit']
 
     for song in songs:
         
