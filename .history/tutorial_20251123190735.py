@@ -346,6 +346,8 @@ def recognize_song():
 
     print(song_table)
     print("Best match song ID:", best_song_id)
+    return
+    #filtered = [(x, y) for (x, y) in matching_pairs[1] if 1800 < y < 2000]
 
     xs = [p[0] for p in matching_pairs[3]]
     ys = [p[1] for p in matching_pairs[3]]

@@ -17,7 +17,7 @@ Fingerprint = Tuple[int, int, int]    # (hash32, song_id, t_anchor_frame)
 
 DB_PATH = "fingerprints.db"
 SONGS_DB_PATH = "songs.db"
-PLOT_SPECTROGRAM = True
+PLOT_SPECTROGRAM = False
 
 # Define frequency bands (in terms of frequency bin indices)
 # n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
@@ -346,6 +346,8 @@ def recognize_song():
 
     print(song_table)
     print("Best match song ID:", best_song_id)
+    return
+    #filtered = [(x, y) for (x, y) in matching_pairs[1] if 1800 < y < 2000]
 
     xs = [p[0] for p in matching_pairs[3]]
     ys = [p[1] for p in matching_pairs[3]]

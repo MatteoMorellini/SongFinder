@@ -17,7 +17,7 @@ Fingerprint = Tuple[int, int, int]    # (hash32, song_id, t_anchor_frame)
 
 DB_PATH = "fingerprints.db"
 SONGS_DB_PATH = "songs.db"
-PLOT_SPECTROGRAM = True
+PLOT_SPECTROGRAM = False
 
 # Define frequency bands (in terms of frequency bin indices)
 # n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
@@ -256,14 +256,10 @@ def main():
     hash_table = load_db(DB_PATH)
     song_table = load_db(SONGS_DB_PATH)
 
-    data_folder = Path("data")
-    songs = list(data_folder.glob("*.flac"))
-    songs = [song.stem for song in songs]  # get song names without extension
+    songs = ['isthisit', 'foremma', 'osakablues', 'veridisquo']
 
-    print("Beginning processing of songs...")
     for song in songs:
-        print('-'*10)
-
+        
         # 2. load audio
         AUDIO_PATH = f"{song}.flac"
         if not (Path('data')/AUDIO_PATH).exists():
@@ -272,7 +268,6 @@ def main():
         if song in song_table:
             print(f"Song {song} already in DB, skipping.")
             continue
-        print(f"Processing song: {song}")
         signal, sample_rate = sf.read(Path('data') / AUDIO_PATH)
         print(f"Sample Rate: {sample_rate}")
         song_id = get_song_id(song_table, song)
@@ -290,15 +285,13 @@ def main():
         if not PLOT_SPECTROGRAM:
             continue
         os.makedirs('imgs', exist_ok=True)
-        plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / f'{song}.png')
-        
-    print('-'*10)
+        plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
     save_db(DB_PATH, hash_table)
     save_db(SONGS_DB_PATH, song_table)
 
 def recognize_song():
-    AUDIO_PATH = 'short_loveyourz.mp3'
+    AUDIO_PATH = 'isthisit.mp3'
 
     hash_table = load_db(DB_PATH)
     song_table = load_db(SONGS_DB_PATH)
@@ -320,7 +313,6 @@ def recognize_song():
     matching_songs = defaultdict(int)
     matching_pairs = defaultdict(list)
     previous_hashes = set()
-
     for h, _, t_anchor in fingerprints:
         h = np.uint32(h)
         if h in previous_hashes: continue
@@ -333,30 +325,23 @@ def recognize_song():
                 if song_id in previous_songs: continue
                 previous_songs.add(song_id)
                 matching_songs[song_id] += 1
-    
-    best_song_id = None
-    best_score = 0
-    for song_id, matching_pair in matching_pairs.items():
-        offsets = [t_db - t_q for (t_q, t_db) in matching_pair]
-        counts = collections.Counter(offsets)
-        offset, score = counts.most_common(1)[0]
-        if score > best_score:
-            best_score = score
-            best_song_id = song_id
-
     print(song_table)
-    print("Best match song ID:", best_song_id)
+    print(matching_songs)
+    #filtered = [(x, y) for (x, y) in matching_pairs[1] if 1800 < y < 2000]
 
     xs = [p[0] for p in matching_pairs[3]]
     ys = [p[1] for p in matching_pairs[3]]
 
     plt.figure(figsize=(16, 10))
     plt.scatter(xs, ys, s=1, c='blue')
-    plt.xlabel("X") # time frames
+    plt.xlabel("X")
     plt.ylabel("Y")
     plt.title("Scatter plot of couples")
     plt.grid(True)
     plt.show()
+
+    offsets = [t_db - t_q for (t_q, t_db) in matching_pairs[2]]
+    counts = collections.Counter(offsets)
 
     # sort by offset
     xs = sorted(counts.keys())
@@ -372,4 +357,5 @@ def recognize_song():
     
 
 if __name__ == '__main__':
-    main()    
+    recognize_song()
+    
