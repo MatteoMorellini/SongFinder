@@ -1,4 +1,3 @@
-import os
 import soundfile as sf
 from pathlib import Path
 import numpy as np
@@ -12,52 +11,27 @@ import pickle
 Peak = Tuple[int, int, float]         # (t_frame, f_bin, amplitude)
 Fingerprint = Tuple[int, int, int]    # (hash32, song_id, t_anchor_frame)
 
-# ---------- CONFIG ---------- #
-
-AUDIO_PATH = "foremma.flac"
-DB_PATH = "fingerprints.db"
-
-# Define frequency bands (in terms of frequency bin indices)
-# n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
-bands = [
-    (0, 10),      # very low
-    (11, 20),     # low
-    (21, 40),     # low-mid
-    (41, 80),     # mid
-    (81, 160),    # mid-high
-    (161, 511)    # high
-]
-
 FUZ_FACTOR = 2  # absorb small variations in frequency / time: 43 → 42, 21 → 20, etc.
 
-# ---------- UTILS ---------- #
-
-def load_db(db_path: str):
-    """Load fingerprint database if present, otherwise return empty dict."""
-    if os.path.exists(db_path):
-        with open(db_path, "rb") as f:
-            table = pickle.load(f)
-        print(f"Loaded DB with {len(table)} unique hashes.")
-        return table
-    else:
-        print("No DB found, starting fresh.")
-        return {}
-
-
-def save_db(db_path: str, table):
-    """Save fingerprint hash table to disk."""
-    with open(db_path, "wb") as f:
-        pickle.dump(table, f)
-    print(f"Saved DB: {len(table)} unique hashes.")
-    
-# ---------- CORE LOGIC ---------- #
-
-def add_hashes_to_table(table, fingerprints):
+def build_hash_table(fingerprints):
     """
-    table: existing dict[uint32 -> list[(song_id, t_anchor)]]
     fingerprints: iterable of (hash32, song_id, t_anchor)
                   where hash32 is np.uint32
     returns: dict[uint32 -> list[(song_id, t_anchor)]]
+    """
+    table = defaultdict(list)
+
+    for h, song_id, t_anchor in fingerprints:
+        h = np.uint32(h) # ensure key is uint32
+        table[h].append((song_id, t_anchor))
+
+    return dict(table)
+
+def add_fingerprints(table, fingerprints):
+    """
+    table: existing dict[uint32 -> list[(song_id, t_anchor)]]
+    fingerprints: iterable of (hash32, song_id, t_anchor)
+    modifies table in-place
     """
 
     for h, song_id, t_anchor in fingerprints:
@@ -67,11 +41,11 @@ def add_hashes_to_table(table, fingerprints):
         else:
             table[h].append((song_id, t_anchor))
 
-    return table
 
 def _quantize(x: int, fuzz: int = FUZ_FACTOR) -> int:
     """Round down to nearest multiple of fuzz."""
     return x - (x % fuzz)
+
 
 def _hash_triplet(f_anchor: int, f_target: int, dt: int,
                   fuzz: int = 2) -> int:
@@ -97,6 +71,7 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
 
     # bit pack: fa[31:22], fb[21:12], dt[11:0]
     return (fa << 22) | (fb << 12) | dt
+
 
 def build_hashes(
     peaks,
@@ -207,7 +182,12 @@ def extract_spectrogram(signal, sample_rate):
     spectrogram = np.abs(stft) # since stft is a complex number, we take the magnitude (real part))
     return spectrogram, sample_rate, hop_length
 
-def add_new_song_to_db(peaks, freqs, song_id, table):
+def add_new_song_to_db(signal, sample_rate, song_id, table, bands):
+    spectrogram, sample_rate, hop_length = extract_spectrogram(signal, sample_rate)
+    peaks = find_peaks(spectrogram, bands)
+    print("Total peaks found:", len(peaks))
+
+    freqs = librosa.fft_frequencies(sr=11025, n_fft=2048)
 
     fingerprints = build_hashes(
         peaks,
@@ -217,15 +197,38 @@ def add_new_song_to_db(peaks, freqs, song_id, table):
         dt_max_frames=30,     # ≈ 1 second ahead at ~30 fps
         song_id = song_id,
     )
+
+    print("Total hashes built:", len(fingerprints)) 
+    add_fingerprints(table, fingerprints)
+    print("Hash table size now:", len(table), "unique hashes")
+
+def plot_spectrogram_and_save(signal, sample_rate, output_path: Path, bands):
+
+    spectrogram, sample_rate, hop_length = extract_spectrogram(signal, sample_rate)
+
+    peaks = find_peaks(spectrogram, bands)
+
+    freqs = librosa.fft_frequencies(sr=sample_rate, n_fft=2048)
+
+    fingerprints = build_hashes(
+        peaks,
+        freqs,
+        fan_out=5,            # 5 target points per anchor
+        dt_min_frames=1,
+        dt_max_frames=30,     # ≈ 1 second ahead at ~30 fps
+        song_id = 0, # ! dummy song id
+    )
+
     print("Total hashes built:", len(fingerprints)) 
     # approx. 5x number of peaks since fan_out=5, but the last time frames may have fewer targets (the last one 0)
 
-    table = add_hashes_to_table(table, fingerprints)
+    table = build_hash_table(fingerprints)
     print("Hash table size:", len(table), "unique hashes")
 
-    save_db(DB_PATH, table)
+    with open("fingerprints.db", "wb") as f:
+        pickle.dump(table, f)
 
-def plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, output_path: Path):
+
     plot_peaks = peaks[::200] # plot only every 200th peak for visibility
     
     plot_times = [t for (t, fb, amp) in plot_peaks]
@@ -245,27 +248,22 @@ def plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs
     plt.close()
 
 def main():
-
-    # 1. load audio
-    signal, sample_rate = sf.read(Path('data') / AUDIO_PATH)
+    signal, sample_rate = sf.read(Path('data') / 'isthisit.flac')
     print(f"Sample Rate: {sample_rate}")
 
-    # 2. load or create fingerprint DB
-    table = load_db(DB_PATH)
-    song_id = 0  # in a real app, assign unique IDs to each song
-    
-    # 3. extract spectrogram and find peaks
-    spectrogram, sample_rate, hop_length = extract_spectrogram(signal, sample_rate)
-    peaks = find_peaks(spectrogram, bands)
-    print("Total peaks found:", len(peaks))
+    # Define frequency bands (in terms of frequency bin indices)
+    # n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
+    bands = [
+        (0, 10),      # very low
+        (11, 20),     # low
+        (21, 40),     # low-mid
+        (41, 80),     # mid
+        (81, 160),    # mid-high
+        (161, 511)    # high
+    ]
 
-    # 4. build hashes and add to DB
-    freqs = librosa.fft_frequencies(sr=11025, n_fft=2048)
-    add_new_song_to_db(peaks, freqs, song_id, table)
+    plot_spectrogram_and_save(signal, sample_rate, Path('imgs') / 'spectrogram.png', bands)
 
-    # 5. plot spectrogram with peaks
-    os.makedirs('imgs', exist_ok=True)
-    plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
 
 

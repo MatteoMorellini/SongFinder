@@ -69,6 +69,7 @@ def add_hashes_to_table(table, fingerprints):
 
     return table
 
+
 def _quantize(x: int, fuzz: int = FUZ_FACTOR) -> int:
     """Round down to nearest multiple of fuzz."""
     return x - (x % fuzz)

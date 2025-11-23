@@ -52,7 +52,7 @@ def save_db(db_path: str, table):
     
 # ---------- CORE LOGIC ---------- #
 
-def add_hashes_to_table(table, fingerprints):
+def extend_table(table, fingerprints):
     """
     table: existing dict[uint32 -> list[(song_id, t_anchor)]]
     fingerprints: iterable of (hash32, song_id, t_anchor)
@@ -69,9 +69,11 @@ def add_hashes_to_table(table, fingerprints):
 
     return table
 
+
 def _quantize(x: int, fuzz: int = FUZ_FACTOR) -> int:
     """Round down to nearest multiple of fuzz."""
     return x - (x % fuzz)
+
 
 def _hash_triplet(f_anchor: int, f_target: int, dt: int,
                   fuzz: int = 2) -> int:
@@ -97,6 +99,7 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
 
     # bit pack: fa[31:22], fb[21:12], dt[11:0]
     return (fa << 22) | (fb << 12) | dt
+
 
 def build_hashes(
     peaks,
@@ -220,10 +223,11 @@ def add_new_song_to_db(peaks, freqs, song_id, table):
     print("Total hashes built:", len(fingerprints)) 
     # approx. 5x number of peaks since fan_out=5, but the last time frames may have fewer targets (the last one 0)
 
-    table = add_hashes_to_table(table, fingerprints)
+    table = extend_table(table, fingerprints)
     print("Hash table size:", len(table), "unique hashes")
 
-    save_db(DB_PATH, table)
+    with open("fingerprints.db", "wb") as f:
+        pickle.dump(table, f)
 
 def plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, output_path: Path):
     plot_peaks = peaks[::200] # plot only every 200th peak for visibility
@@ -263,8 +267,8 @@ def main():
     freqs = librosa.fft_frequencies(sr=11025, n_fft=2048)
     add_new_song_to_db(peaks, freqs, song_id, table)
 
-    # 5. plot spectrogram with peaks
-    os.makedirs('imgs', exist_ok=True)
+    return
+
     plot_spectrogram_and_save(spectrogram, sample_rate, hop_length, peaks, freqs, Path('imgs') / 'spectrogram.png')
 
 
