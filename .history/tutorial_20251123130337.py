@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import librosa
 from collections import defaultdict
 from typing import List, Tuple, Dict
-import pickle
 
 # type aliases
 Peak = Tuple[int, int, float]         # (t_frame, f_bin, amplitude)
@@ -96,8 +95,7 @@ def build_hashes(
 
     for i in range(n_peaks):
         t_a, f_a, amp_a = peaks[i]
-        if freq_band_hz is not None: 
-            delta_f = freq_band_hz[0] + freq_band_hz[1] * freqs[f_a]
+        delta_f = freq_band_hz[0] + freq_band_hz[1] * freqs[f_a]
         # Collect candidates in the target zone ahead of this anchor
         candidates = []
 
@@ -191,20 +189,13 @@ def plot_spectrogram_and_save(signal, sample_rate, output_path: Path, bands):
         fan_out=5,            # 5 target points per anchor
         dt_min_frames=1,
         dt_max_frames=30,     # ≈ 1 second ahead at ~30 fps
-        song_id = 0, # ! dummy song id
     )
 
     print("Total hashes built:", len(fingerprints)) 
     # approx. 5x number of peaks since fan_out=5, but the last time frames may have fewer targets (the last one 0)
 
-    table = build_hash_table(fingerprints)
-    print("Hash table size:", len(table), "unique hashes")
-
-    with open("fingerprints.db", "wb") as f:
-        pickle.dump(table, f)
-
-
     plot_peaks = peaks[::200] # plot only every 200th peak for visibility
+    
     
     plot_times = [t for (t, fb, amp) in plot_peaks]
     plot_freqs = [freqs[fb] for (t, fb, amp) in plot_peaks]
@@ -223,7 +214,7 @@ def plot_spectrogram_and_save(signal, sample_rate, output_path: Path, bands):
     plt.close()
 
 def main():
-    signal, sample_rate = sf.read(Path('data') / 'isthisit.flac')
+    signal, sample_rate = sf.read(Path('data') / 'windowlicker.flac')
     print(f"Sample Rate: {sample_rate}")
 
     # Define frequency bands (in terms of frequency bin indices)
@@ -244,4 +235,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

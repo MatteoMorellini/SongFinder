@@ -200,11 +200,16 @@ def plot_spectrogram_and_save(signal, sample_rate, output_path: Path, bands):
     table = build_hash_table(fingerprints)
     print("Hash table size:", len(table), "unique hashes")
 
+    print(list(table.keys())[-10:])
+    print(table[58785822])
+    print(table[58785814])
+    print(table[0])
+
     with open("fingerprints.db", "wb") as f:
         pickle.dump(table, f)
 
-
     plot_peaks = peaks[::200] # plot only every 200th peak for visibility
+    
     
     plot_times = [t for (t, fb, amp) in plot_peaks]
     plot_freqs = [freqs[fb] for (t, fb, amp) in plot_peaks]
@@ -244,4 +249,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
