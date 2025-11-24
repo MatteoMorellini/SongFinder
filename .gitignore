@@ -2,3 +2,5 @@ myenv/
 data/
 *.db
 imgs/
+.history/
+test/

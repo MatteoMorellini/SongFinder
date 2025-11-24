@@ -17,7 +17,7 @@ Fingerprint = Tuple[int, int, int]    # (hash32, song_id, t_anchor_frame)
 
 DB_PATH = "fingerprints.db"
 SONGS_DB_PATH = "songs.db"
-PLOT_SPECTROGRAM = True
+PLOT_SPECTROGRAM = False
 
 # Define frequency bands (in terms of frequency bin indices)
 # n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
@@ -59,6 +59,22 @@ def get_song_id(table, name):
     new_id = len(table) + 1
     table[name] = new_id
     return new_id
+
+def inject_noise(signal, noise_level=0.005):
+    # SNR in dB
+    snr_db = 10  # lower = noisier
+
+    # Compute signal power and noise power
+    signal_power = np.mean(signal**2)
+    noise_power = signal_power / (10**(snr_db / 10))
+
+    # Generate white Gaussian noise
+    noise = np.random.normal(0, np.sqrt(noise_power), size=signal.shape)
+    # Add noise
+    signal_noisy = signal + noise
+    # ? check for negative values? 
+    return signal_noisy
+
 
 def add_hashes_to_table(table, fingerprints):
     """
@@ -298,12 +314,12 @@ def main():
     save_db(SONGS_DB_PATH, song_table)
 
 def recognize_song():
-    AUDIO_PATH = 'short_loveyourz.mp3'
+    AUDIO_PATH = 'noisier_runaway.mp3'
 
     hash_table = load_db(DB_PATH)
     song_table = load_db(SONGS_DB_PATH)
 
-    signal, sample_rate = sf.read(Path('data') / AUDIO_PATH)
+    signal, sample_rate = sf.read(Path('test') / AUDIO_PATH)
     spectrogram, sample_rate, hop_length = extract_spectrogram(signal, sample_rate)
     peaks = find_peaks(spectrogram, bands)
     freqs = librosa.fft_frequencies(sr=11025, n_fft=2048)
@@ -336,19 +352,29 @@ def recognize_song():
     
     best_song_id = None
     best_score = 0
+    best_counts = None
     for song_id, matching_pair in matching_pairs.items():
         offsets = [t_db - t_q for (t_q, t_db) in matching_pair]
         counts = collections.Counter(offsets)
+        """window = 10  # number of bins in the aggregation window
+        kernel = np.ones(window, dtype=float)
+        aggregated = np.convolve(list(counts.values()), kernel, mode='same')  # S[k]
+        best_bin = np.argmax(aggregated)
+        score = aggregated[best_bin]"""
         offset, score = counts.most_common(1)[0]
         if score > best_score:
             best_score = score
             best_song_id = song_id
+            best_counts = counts    
 
     print(song_table)
-    print("Best match song ID:", best_song_id)
+    invert_song_table = {v: k for k, v in song_table.items()}
 
-    xs = [p[0] for p in matching_pairs[3]]
-    ys = [p[1] for p in matching_pairs[3]]
+    print("\nBest match song:", invert_song_table.get(best_song_id, "Unknown"))
+    
+    # return
+    xs = [p[0] for p in matching_pairs[best_song_id]]
+    ys = [p[1] for p in matching_pairs[best_song_id]]
 
     plt.figure(figsize=(16, 10))
     plt.scatter(xs, ys, s=1, c='blue')
@@ -359,8 +385,8 @@ def recognize_song():
     plt.show()
 
     # sort by offset
-    xs = sorted(counts.keys())
-    ys = [counts[x] for x in xs]
+    xs = sorted(best_counts.keys())
+    ys = [best_counts[x] for x in xs]
 
     plt.figure(figsize=(8, 3))
     plt.bar(xs, ys, width=1.0)
@@ -372,4 +398,4 @@ def recognize_song():
     
 
 if __name__ == '__main__':
-    main()    
+    recognize_song()
