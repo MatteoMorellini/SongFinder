@@ -126,7 +126,7 @@ def build_hashes(
     freqs,
     fan_out=5,
     dt_min_frames=1,      # ≥ 1 frame ahead
-    dt_max_frames=30*6,     # ≤ ~1s ahead if ~30 fps
+    dt_max_frames=30,     # ≤ ~1s ahead if ~30 fps
     song_id=0,
     freq_band_hz=(40,0.4),    # e.g. 1200 → ±1200 Hz around anchor; None = no limit
     fuzz=FUZ_FACTOR,
@@ -314,7 +314,7 @@ def main():
     save_db(SONGS_DB_PATH, song_table)
 
 def recognize_song():
-    AUDIO_PATH = 'noisier_runaway.mp3'
+    AUDIO_PATH = 'short_foremma.mp3'
 
     hash_table = load_db(DB_PATH)
     song_table = load_db(SONGS_DB_PATH)
@@ -329,7 +329,7 @@ def recognize_song():
         freqs,
         fan_out=5,            # 5 target points per anchor
         dt_min_frames=1,
-        dt_max_frames=30,     # ≈ 1 second ahead at ~30 fps
+        dt_max_frames=30,     
     )
     print("Total hashes built:", len(fingerprints)) 
     # (hash32, song_id, t_anchor_frame)
@@ -367,11 +367,17 @@ def recognize_song():
             best_song_id = song_id
             best_counts = counts    
 
-    print(song_table)
     invert_song_table = {v: k for k, v in song_table.items()}
 
     print("\nBest match song:", invert_song_table.get(best_song_id, "Unknown"))
-    
+    window = 10  # number of bins in the aggregation window
+    kernel = np.ones(window, dtype=float)
+    aggregated = np.convolve(list(counts.values()), kernel, mode='same')  # S[k]
+    plt.hist(aggregated, bins=100)
+    plt.xlabel("Value")
+    plt.ylabel("Frequency")
+    plt.show()
+    return
     # return
     xs = [p[0] for p in matching_pairs[best_song_id]]
     ys = [p[1] for p in matching_pairs[best_song_id]]
