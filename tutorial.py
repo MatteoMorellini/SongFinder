@@ -377,8 +377,7 @@ def recognize_song():
     plt.xlabel("Value")
     plt.ylabel("Frequency")
     plt.show()
-    return
-    # return
+
     xs = [p[0] for p in matching_pairs[best_song_id]]
     ys = [p[1] for p in matching_pairs[best_song_id]]
 

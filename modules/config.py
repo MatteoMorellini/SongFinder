@@ -3,6 +3,7 @@
 DB_PATH = "fingerprints.db"
 SONGS_DB_PATH = "songs.db"
 PLOT_SPECTROGRAM = False
+PLOT_MATCHING = True
 
 # Define frequency bands (in terms of frequency bin indices)
 # n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz

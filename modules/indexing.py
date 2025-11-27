@@ -1,6 +1,7 @@
 from pathlib import Path
 import librosa
 import os
+from tqdm import tqdm
 from .config import BANDS, N_FFT, PLOT_SPECTROGRAM, TARGET_SR, HOP_LENGTH
 from .db import load_db, save_db, get_song_id
 from .audio import load_audio, extract_spectrogram, find_peaks, plot_spectrogram_and_save
@@ -9,9 +10,9 @@ from .hashing import build_hashes, add_hashes_to_table
 def index_song(audio_path: Path, hash_table, song_table):
     song_name = audio_path.stem  # filename without extension
     if song_name in song_table:
-        print(f"Song '{song_name}' is already indexed. Skipping.")
+        #print(f"Song '{song_name}' is already indexed. Skipping.")
         return
-    print(f"Processing {song_name}")
+    #print(f"Processing {song_name}")
     signal, sr = load_audio(audio_path)
     spectrogram = extract_spectrogram(signal, sr)
     peaks = find_peaks(spectrogram, BANDS)
@@ -36,7 +37,9 @@ def index_folder(
     hash_table = load_db(hash_db_path)
     song_table = load_db(songs_db_path)
 
-    for audio_path in folder.glob(pattern):
+    audio_paths = list(folder.glob(pattern))
+
+    for audio_path in tqdm(audio_paths, desc="Indexing songs", unit='song'):
         index_song(audio_path, hash_table, song_table)
 
     save_db(hash_db_path, hash_table)
