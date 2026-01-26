@@ -1,62 +1,148 @@
 #!/usr/bin/env python3
 """
-Index songs into the database.
+Index songs into the database for Shazam or GraFP.
 
 Usage:
-    python scripts/index_songs.py --approach shazam --folder data/ --pattern "*.flac"
+    # Shazam
+    python scripts/index_songs.py --approach shazam --folder ~/datasets/fma_small
+    
+    # GraFP (requires checkpoint)
+    python scripts/index_songs.py --approach grafp --folder ~/datasets/fma_small \
+                                  --checkpoint path/to/model.pth
 """
 
 import argparse
 from pathlib import Path
 import sys
 
-# Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def main():
-    parser = argparse.ArgumentParser(description='SongFinder - Index Songs')
-    parser.add_argument('--approach', '-a', choices=['shazam', 'grafp'], required=True,
-                        help='Recognition approach to use')
-    parser.add_argument('--folder', '-f', type=str, required=True,
-                        help='Path to folder containing audio files')
-    parser.add_argument('--pattern', '-p', type=str, default='*.flac',
-                        help='Glob pattern for audio files (default: *.flac)')
-    parser.add_argument('--db-path', type=str, default=None,
-                        help='Path to save database (default: project root)')
+def index_shazam(folder: Path, output_dir: Path, pattern: str):
+    """Index songs using Shazam approach."""
+    from approaches.shazam import ShazamRecognizer
+    from tqdm import tqdm
     
+    print("\n=== Shazam Indexing ===")
+    
+    recognizer = ShazamRecognizer()
+    
+    # Try to load existing
+    try:
+        recognizer.load(output_dir)
+        print(f"Loaded existing: {recognizer.num_indexed_songs} songs")
+    except:
+        print("Starting fresh database")
+    
+    audio_files = list(folder.rglob(pattern))
+    if not audio_files:
+        audio_files = list(folder.rglob("*.mp3"))
+    
+    print(f"Found {len(audio_files)} audio files")
+    
+    for f in tqdm(audio_files, desc="Indexing"):
+        try:
+            recognizer.index_song(f)
+        except Exception as e:
+            print(f"Error {f.name}: {e}")
+    
+    output_dir.mkdir(parents=True, exist_ok=True)
+    recognizer.save(output_dir)
+    
+    print(f"✓ Saved {recognizer.num_indexed_songs} songs to {output_dir}")
+    return recognizer.num_indexed_songs
+
+
+def index_grafp(folder: Path, output_dir: Path, checkpoint: str, 
+                config: str, device: str, pattern: str):
+    """Index songs using GraFP approach."""
+    import torch
+    import torchaudio
+    import numpy as np
+    from tqdm import tqdm
+    from approaches.grafp import load_config, load_model
+    from approaches.grafp.modules.transformations import AudioTransform
+    
+    print("\n=== GraFP Indexing ===")
+    
+    cfg = load_config(config)
+    model = load_model(cfg, checkpoint)
+    transform = AudioTransform(cfg).to(device)
+    
+    audio_files = list(folder.rglob(pattern))
+    if not audio_files:
+        audio_files = list(folder.rglob("*.mp3"))
+    
+    print(f"Found {len(audio_files)} audio files")
+    
+    fingerprints = []
+    metadata = []
+    
+    model.eval()
+    for f in tqdm(audio_files, desc="Generating fingerprints"):
+        try:
+            waveform, sr = torchaudio.load(f)
+            waveform = waveform.mean(dim=0)
+            
+            if sr != cfg['fs']:
+                waveform = torchaudio.transforms.Resample(sr, cfg['fs'])(waveform)
+            
+            segments = transform(waveform.unsqueeze(0).to(device))
+            
+            with torch.no_grad():
+                _, _, z, _ = model(segments, segments)
+            
+            fingerprints.append(z.cpu().numpy())
+            for _ in range(z.shape[0]):
+                metadata.append(f.stem)
+                
+        except Exception as e:
+            print(f"Error {f.name}: {e}")
+    
+    if fingerprints:
+        fp_array = np.concatenate(fingerprints)
+        
+        output_dir.mkdir(parents=True, exist_ok=True)
+        np.save(output_dir / "fingerprints.npy", fp_array)
+        np.save(output_dir / "metadata.npy", np.array(metadata))
+        
+        print(f"✓ Saved {len(audio_files)} songs ({fp_array.shape[0]} segments) to {output_dir}")
+        return len(audio_files)
+    
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Index songs for recognition')
+    parser.add_argument('--approach', '-a', choices=['shazam', 'grafp'], required=True)
+    parser.add_argument('--folder', '-f', type=str, required=True)
+    parser.add_argument('--output', '-o', type=str, default='./fingerprints')
+    parser.add_argument('--pattern', '-p', type=str, default='*.flac')
+    parser.add_argument('--checkpoint', type=str, default=None, help='GraFP checkpoint')
+    parser.add_argument('--config', type=str, default='approaches/grafp/config/grafp.yaml')
+    parser.add_argument('--device', type=str, default='cuda')
     args = parser.parse_args()
-    folder = Path(args.folder)
+    
+    import torch
+    if args.device == 'cuda' and not torch.cuda.is_available():
+        args.device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+    
+    folder = Path(args.folder).expanduser()
+    output = Path(args.output).expanduser()
     
     if not folder.exists():
         print(f"Error: Folder not found: {folder}")
         sys.exit(1)
     
     if args.approach == 'shazam':
-        from approaches.shazam import ShazamRecognizer
-        
-        recognizer = ShazamRecognizer()
-        
-        # Try to load existing database
-        try:
-            recognizer.load()
-            print(f"Loaded existing database: {recognizer.num_indexed_songs} songs")
-        except:
-            print("Starting with empty database")
-        
-        print(f"\nIndexing songs from: {folder}")
-        print(f"Pattern: {args.pattern}")
-        
-        count = recognizer.index_folder(folder, pattern=args.pattern)
-        recognizer.save()
-        
-        print(f"\n✓ Indexed {count} new songs")
-        print(f"  Total songs in database: {recognizer.num_indexed_songs}")
+        index_shazam(folder, output / "shazam", args.pattern)
         
     elif args.approach == 'grafp':
-        print("GraFP indexing requires training a model first.")
-        print("Use: python approaches/grafp/train.py --help")
-        print("Then: python approaches/grafp/generate.py to create fingerprints")
+        if not args.checkpoint:
+            print("Error: --checkpoint required for GraFP")
+            sys.exit(1)
+        index_grafp(folder, output / "grafp", args.checkpoint, 
+                   args.config, args.device, args.pattern)
 
 
 if __name__ == '__main__':
