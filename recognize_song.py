@@ -1,11 +1,12 @@
 from pathlib import Path
-from modules.config import PLOT_MATCHING
 from modules.matching import recognize_song
 import matplotlib.pyplot as plt
+from modules.config import DB_PATH, SONGS_DB_PATH, PLOT_MATCHING
+
 
 if __name__ == "__main__":
-    query_path = Path("test/noisier_runaway.mp3")
-    song, score, matching_pairs = recognize_song(query_path)
+    query_path = Path("test/isthisit.mp3")
+    song, score, matching_pairs = recognize_song(query_path, DB_PATH, SONGS_DB_PATH)
     print("Best match:", song, "| score:", score)
 
     if PLOT_MATCHING and len(matching_pairs)>0:
