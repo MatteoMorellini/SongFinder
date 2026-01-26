@@ -32,57 +32,7 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
     # bit pack: fa[31:22], fb[21:12], dt[11:0]
     return (fa << 22) | (fb << 12) | dt
 
-def build_hashes(peaks, freqs, song_id=0, fan_out=5,
-                 dt_min_frames=1, dt_max_frames=30,
-                 freq_band_hz=(40, 0.4)) -> List[Fingerprint]:
-    """
-    peaks:      list of (t_frame, f_bin, amplitude), assumed sorted by t_frame
-    freqs:      1D array mapping frequency-bin index → Hz (librosa.fft_frequencies)
-    sample_rate, hop_length: used only for reference / debugging
-    fan_out:    max number of target points per anchor # ! interesting hyperparameter to twist in experiments
-    returns:    list of hashes and metadata
-                hashes: list of (f_anchor_bin, f_target_bin, dt_frames)
-    """
-    fingerprints: List[Fingerprint] = []
-    n_peaks = len(peaks)
-
-    for i in range(n_peaks):
-        t_a, f_a, amp_a = peaks[i]
-        if freq_band_hz is not None:
-            delta_f = freq_band_hz[0] + freq_band_hz[1] * freqs[f_a]
-        # collect candidates in the target zone ahead of this anchor
-        candidates = []
-        j = i + 1
-        while j < n_peaks:
-            t_b, f_b, amp_b = peaks[j]
-            dt = t_b - t_a
-            if dt > dt_max_frames:
-                break
-            if dt >= dt_min_frames:
-                if freq_band_hz is not None:
-                    # check frequency band constraint
-                    if abs(freqs[f_b] - freqs[f_a]) <= delta_f:
-                        candidates.append((t_b, f_b, amp_b, dt))
-                else:
-                    # no frequency band constraint
-                    candidates.append((t_b, f_b, amp_b, dt))
-            j += 1
-
-        if not candidates:
-            continue
-
-        # sort candidates by amplitude descending
-        candidates.sort(key=lambda x: -x[2])
-        # pick top fan_out strongest candidates
-        strongest = candidates[:fan_out]
-
-        for (_, f_b, _, dt) in strongest:
-            h = _hash_triplet(f_a, f_b, dt)
-            fingerprints.append((np.uint32(h), song_id, t_a))
-    return fingerprints
-
-
-def __build_hashes(peaks, freqs, song_id=None, fan_out=5,
+def build_hashes(peaks, freqs, song_id=None, fan_out=5,
                  dt_min_frames=1, dt_max_frames=30,
                  freq_band_hz=(40, 0.4)) -> List[Fingerprint]:
     """

@@ -46,35 +46,15 @@ class GCN(torch.nn.Module):
 
 
 def neighbors_to_edge_index(neighbors, undirected=False, num_nodes=None):
-    """
-    Convert a neighbor list representation to PyTorch Geometric edge index format.
-    
-    Args:
-        neighbors: List of neighbor lists where neighbors[i] contains indices of nodes adjacent to node i
-        undirected: If True, adds reverse edges to make the graph undirected (doubling all connections)
-        num_nodes: (unused) Number of nodes in the graph
-    
-    Returns:
-        torch.Tensor: Edge index in PyG format with shape [2, num_edges], where first row contains source nodes
-                     and second row contains destination nodes
-    """
-    # Initialize lists to store source and destination node indices
     src, dst = [], []
-    
-    # Iterate through each node and its neighbors
     for i, nbrs in enumerate(neighbors):
-        # For each neighbor of node i, add an edge from i to that neighbor
         for j in nbrs:
             src.append(i)
             dst.append(j)
 
-    # Convert to PyTorch tensor with long dtype (required by PyG)
     edge_index = torch.tensor([src, dst], dtype=torch.long)
-    
-    # If undirected, add reverse edges so all connections are bidirectional
-    if undirected:
+    if undirected: # if undirected, add reverse edges so all connections are doubled
         edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
-    
     return edge_index
 
 def build_graph(nodes, edges, label):
