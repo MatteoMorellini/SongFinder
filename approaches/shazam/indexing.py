@@ -20,7 +20,7 @@ def index_song(audio_path: Path, hash_table, song_table):
         
     song_id = get_song_id(song_table, song_name)
 
-    fingerprints, _ = build_hashes(peaks, freqs, song_id=song_id)
+    fingerprints = build_hashes(peaks, freqs, song_id=song_id)
     add_hashes_to_table(hash_table, fingerprints)
 
     if not PLOT_SPECTROGRAM:

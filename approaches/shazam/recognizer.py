@@ -70,7 +70,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         freqs = librosa.fft_frequencies(sr=TARGET_SR, n_fft=N_FFT)
         
         song_id = get_song_id(self.song_table, song_name)
-        fingerprints, _ = build_hashes(peaks, freqs, song_id=song_id)
+        fingerprints = build_hashes(peaks, freqs, song_id=song_id)
         add_hashes_to_table(self.hash_table, fingerprints)
     
     def index_folder(self, folder: Path, pattern: str = "*.flac") -> int:
@@ -108,7 +108,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         spectrogram = extract_spectrogram(signal, sample_rate)
         peaks = find_peaks(spectrogram, BANDS)
         freqs = librosa.fft_frequencies(sr=TARGET_SR, n_fft=N_FFT)
-        fingerprints, _ = build_hashes(peaks, freqs)
+        fingerprints = build_hashes(peaks, freqs)
         
         # Match against database
         matching_pairs = defaultdict(list)
