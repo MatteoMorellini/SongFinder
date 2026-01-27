@@ -41,7 +41,8 @@ def main():
         from approaches.shazam import ShazamRecognizer
         
         recognizer = ShazamRecognizer()
-        recognizer.load()
+        db_path = Path(args.db_path) if args.db_path else Path("fingerprints/shazam")
+        recognizer.load(db_path)
         
         print(f"Recognizing: {query_path.name}")
         print(f"Database: {recognizer.num_indexed_songs} songs indexed")
@@ -60,9 +61,58 @@ def main():
             print("\n✗ No match found")
             
     elif args.approach == 'grafp':
-        print("GraFP recognition requires a trained model checkpoint.")
-        print("Use: python approaches/grafp/query.py --help")
-        print("Or:  python approaches/grafp/generate.py to create fingerprints")
+        from approaches.grafp.inference import load_model, load_fingerprints, recognize as grafp_recognize
+        from approaches.grafp.util import load_config
+        from approaches.grafp.modules.transformations import AudioTransform
+        import torch
+        
+        cfg_path = 'approaches/grafp/config/grafp.yaml'
+        cfg = load_config(cfg_path)
+        
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        if not args.checkpoint:
+            print("Error: --checkpoint required for GraFP")
+            sys.exit(1)
+            
+        model = load_model(cfg, args.checkpoint)
+        transform = AudioTransform(cfg).to(device)
+        
+        # Load database fingerprints
+        db_path = Path(args.db_path) if args.db_path else Path("fingerprints/grafp")
+        try:
+            db_fp, db_meta = load_fingerprints(db_path)
+        except Exception as e:
+            print(f"Error loading database from {db_path}: {e}")
+            sys.exit(1)
+            
+        print(f"Recognizing: {query_path.name}")
+        print(f"Database: {len(db_meta)} fingerprints loaded")
+        
+        # Extract query fingerprints
+        import soundfile as sf
+        signal, sr = sf.read(query_path)
+        waveform = torch.from_numpy(signal).float()
+        
+        # Convert to mono if stereo
+        if waveform.ndim > 1:
+            waveform = waveform.mean(dim=1)
+            
+        if sr != cfg['fs']:
+            waveform = torchaudio.transforms.Resample(sr, cfg['fs'])(waveform)
+            
+        segments = transform(waveform.unsqueeze(0).to(device))
+        
+        with torch.no_grad():
+            _, _, query_fp, _ = model(segments, segments)
+        
+        song_name, count = grafp_recognize(query_fp.cpu().numpy(), db_fp, db_meta)
+        
+        if song_name:
+            print(f"\n✓ Match found: {song_name}")
+            print(f"  Confidence (votes): {count}")
+        else:
+            print("\n✗ No match found")
         
 
 if __name__ == '__main__':

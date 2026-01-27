@@ -78,11 +78,18 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
     fingerprints = []
     metadata = []
     
+    import soundfile as sf
+    
     model.eval()
     for f in tqdm(audio_files, desc="Generating fingerprints"):
         try:
-            waveform, sr = torchaudio.load(f)
-            waveform = waveform.mean(dim=0)
+            # Using soundfile instead of torchaudio for better backend stability
+            signal, sr = sf.read(f)
+            waveform = torch.from_numpy(signal).float()
+            
+            # Convert to mono if stereo
+            if waveform.ndim > 1:
+                waveform = waveform.mean(dim=1)
             
             if sr != cfg['fs']:
                 waveform = torchaudio.transforms.Resample(sr, cfg['fs'])(waveform)
@@ -100,11 +107,18 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
             print(f"Error {f.name}: {e}")
     
     if fingerprints:
-        fp_array = np.concatenate(fingerprints)
+        fp_array = np.concatenate(fingerprints).astype('float32')
         
         output_dir.mkdir(parents=True, exist_ok=True)
-        np.save(output_dir / "fingerprints.npy", fp_array)
-        np.save(output_dir / "metadata.npy", np.array(metadata))
+        
+        # Save in the format expected by load_fingerprints (inference.py)
+        # Using memmap for better scalability
+        arr = np.memmap(output_dir / "db.mm", dtype='float32', mode='w+', shape=fp_array.shape)
+        arr[:] = fp_array[:]
+        arr.flush()
+        
+        np.save(output_dir / "db_shape.npy", fp_array.shape)
+        np.save(output_dir / "db_metadata.npy", np.array(metadata))
         
         print(f"✓ Saved {len(audio_files)} songs ({fp_array.shape[0]} segments) to {output_dir}")
         return len(audio_files)

@@ -32,14 +32,17 @@ def load_model(cfg, checkpoint_path, k=3):
     if not os.path.isfile(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
     
-    checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+    checkpoint = torch.load(checkpoint_path, map_location=DEVICE, weights_only=False)
     state_dict = checkpoint['state_dict']
     
     # Handle DataParallel prefix mismatch
     if torch.cuda.device_count() <= 1 and any('module' in k for k in state_dict.keys()):
         state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
     
-    model.load_state_dict(state_dict)
+    # Handle checkpoint key remapping (convs -> conv)
+    state_dict = {k.replace('peak_extractor.convs.', 'peak_extractor.conv.'): v for k, v in state_dict.items()}
+    
+    model.load_state_dict(state_dict, strict=False)
     model.eval()
     return model
 
