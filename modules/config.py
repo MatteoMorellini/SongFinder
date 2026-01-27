@@ -1,7 +1,7 @@
 # ---------- CONFIG ---------- #
 
-DB_PATH = "fingerprints.db"
-SONGS_DB_PATH = "songs.db"
+DB_PATH = "fingerprints/fingerprints.db"
+SONGS_DB_PATH = "fingerprints/songs.db"
 PLOT_SPECTROGRAM = False
 PLOT_MATCHING = True
 

@@ -32,7 +32,7 @@ def _hash_triplet(f_anchor: int, f_target: int, dt: int,
     # bit pack: fa[31:22], fb[21:12], dt[11:0]
     return (fa << 22) | (fb << 12) | dt
 
-def build_hashes(peaks, freqs, song_id=None, fan_out=5,
+def build_hashes(peaks, freqs, song_id=0, fan_out=5,
                  dt_min_frames=1, dt_max_frames=30,
                  freq_band_hz=(40, 0.4)) -> List[Fingerprint]:
     """
@@ -44,7 +44,6 @@ def build_hashes(peaks, freqs, song_id=None, fan_out=5,
                 hashes: list of (f_anchor_bin, f_target_bin, dt_frames)
     """
     fingerprints: List[Fingerprint] = []
-    edges = []
     n_peaks = len(peaks)
 
     for i in range(n_peaks):
@@ -63,10 +62,10 @@ def build_hashes(peaks, freqs, song_id=None, fan_out=5,
                 if freq_band_hz is not None:
                     # check frequency band constraint
                     if abs(freqs[f_b] - freqs[f_a]) <= delta_f:
-                        candidates.append((t_b, f_b, amp_b, dt, j))
+                        candidates.append((t_b, f_b, amp_b, dt))
                 else:
                     # no frequency band constraint
-                    candidates.append((t_b, f_b, amp_b, dt, j))
+                    candidates.append((t_b, f_b, amp_b, dt))
             j += 1
 
         if not candidates:
@@ -76,19 +75,11 @@ def build_hashes(peaks, freqs, song_id=None, fan_out=5,
         candidates.sort(key=lambda x: -x[2])
         # pick top fan_out strongest candidates
         strongest = candidates[:fan_out]
-    
-        local_edges = []
-        for (t_b, f_b, amp_b, _, j) in strongest:
-            local_edges.append(j)
 
-        edges.append(local_edges)
-
-        if song_id is not None:
-            for (_, f_b, _, dt, _) in strongest:
-                h = _hash_triplet(f_a, f_b, dt)
-                fingerprints.append((np.uint32(h), song_id, t_a))
-
-    return fingerprints, edges
+        for (_, f_b, _, dt) in strongest:
+            h = _hash_triplet(f_a, f_b, dt)
+            fingerprints.append((np.uint32(h), song_id, t_a))
+    return fingerprints
 
 def add_hashes_to_table(table, fingerprints):
     """

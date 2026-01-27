@@ -4,7 +4,7 @@ from modules.matching import recognize_song
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    query_path = Path("test/noisier_runaway.mp3")
+    query_path = Path("/Users/matteomorellini/Downloads/fma_small/000/000997.mp3")
     song, score, matching_pairs = recognize_song(query_path)
     print("Best match:", song, "| score:", score)
 

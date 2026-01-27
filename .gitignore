@@ -9,3 +9,5 @@ test/
 __pycache__/
 **/__pycache__/
 pyg312/
+previous_fingerprints/
+checkpoint/
