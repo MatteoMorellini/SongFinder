@@ -184,27 +184,4 @@ class GraphEncoder(nn.Module):
         x = torch.mean(x,dim=2).squeeze(-1).squeeze(-1)
         
         
-        return x 
-
-
-
-if __name__ == '__main__':
-
-    encoder = GraphEncoder()
-    dummy_tensor = torch.rand(8,3,512)
-    out = encoder.forward(dummy_tensor)
-    
-
-    
-    
-
-
-
-            
-
-        
-
-
-
-
-        
+        return x

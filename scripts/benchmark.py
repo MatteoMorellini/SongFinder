@@ -274,8 +274,8 @@ def benchmark_grafp(
     
     # Load database
     start = time.time()
-    db_fp = np.load(db_dir / "grafp" / "fingerprints.npy")
-    db_meta = np.load(db_dir / "grafp" / "metadata.npy", allow_pickle=True)
+    from approaches.grafp.inference import load_fingerprints
+    db_fp, db_meta = load_fingerprints(db_dir / "grafp")
     db_load_time = (time.time() - start) * 1000
     
     results = BenchmarkResults(
