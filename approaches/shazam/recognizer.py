@@ -90,6 +90,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         clip_length_sec: Optional[float] = None,
         snr_db: Optional[float] = None
     ) -> Tuple[Optional[str], float, Dict[str, Any]]:
+    
         """
         Recognize a song from an audio query.
         
@@ -125,17 +126,30 @@ class ShazamRecognizer(BaseSongRecognizer):
                     matching_pairs[song_id].append((t_anchor, t_anchor_match))
         
         # Find best match using time offset voting
-        best_song_id = None
-        best_score = 0
-        
+        song_scores = {}
         for song_id, pairs in matching_pairs.items():
             offsets = [t_db - t_q for (t_q, t_db) in pairs]
             counts = Counter(offsets)
             if counts:
-                _, score = counts.most_common(1)[0]
-                if score > best_score:
-                    best_score = score
-                    best_song_id = song_id
+                _, score = counts.most_common(1)[0]  # Get peak score
+                song_scores[song_id] = score
+            
+        if song_scores:
+            # Extract songs and scores in order
+            songs = list(song_scores.keys())
+            scores = np.array(list(song_scores.values()), dtype=np.float64)
+            
+            # Apply softmax
+            exp_scores = np.exp(scores - np.max(scores))
+            probabilities = exp_scores / np.sum(exp_scores)
+            
+            # Get song with highest probability (= highest score)
+            best_idx = np.argmax(probabilities)
+            best_song_id = songs[best_idx]
+            best_confidence = probabilities[best_idx]
+        else:
+            best_song_id = None
+            best_confidence = 0.0
         
         # Get song name from ID
         invert_song_table = {v: k for k, v in self.song_table.items()}
@@ -147,4 +161,4 @@ class ShazamRecognizer(BaseSongRecognizer):
             "num_matched_hashes": len(seen_hashes & set(self.hash_table.keys())),
         }
         
-        return best_song_name, float(best_score), metadata
+        return best_song_name, float(best_confidence), metadata
