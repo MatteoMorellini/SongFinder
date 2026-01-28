@@ -2,6 +2,8 @@
 GraFP inference: fingerprint extraction and similarity search.
 """
 
+from collections import Counter
+
 import os
 import numpy as np
 import torch
@@ -144,7 +146,6 @@ def _recognize_numpy(query_fp, db_fingerprints, db_metadata, k=10):
 def _vote_for_song(indices, db_metadata):
     """Vote by counting matches per song."""
     from collections import Counter
-    
     votes = Counter()
     for idx_row in indices:
         for idx in idx_row:
@@ -155,6 +156,17 @@ def _vote_for_song(indices, db_metadata):
                 votes[song] += 1
     
     if votes:
-        best_song, count = votes.most_common(1)[0]
-        return best_song, count
-    return None, 0
+        # Get all counts for softmax calculation
+        counts = np.array(list(votes.values()), dtype=np.float64)
+        
+        # Compute softmax
+        exp_counts = np.exp(counts - np.max(counts))
+        probabilities = exp_counts / np.sum(exp_counts)
+        
+        # Get top song (Counter.most_common maintains order)
+        best_song = votes.most_common(1)[0][0]
+        confidence = probabilities[0]  # First element has highest confidence
+        
+        return best_song, confidence
+    
+    return None, 0.0
