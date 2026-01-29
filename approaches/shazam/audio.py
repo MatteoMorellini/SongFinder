@@ -7,12 +7,45 @@ import librosa.display
 from pathlib import Path
 
 def load_audio(path):
-    try:
-        signal, sr = sf.read(path)
-        return np.asarray(signal), sr
-    except Exception as e:
-        print(f"Error loading audio from {path}: {e}")
-        return None, None
+    signal, sr = sf.read(path)
+    return np.asarray(signal), sr
+
+def cut_audio(signal, sample_rate, clip_length_sec):
+    np.random.seed(42)
+    total_samples = len(signal)
+    clip_samples = int(clip_length_sec * sample_rate)
+    start = np.random.randint(0, total_samples - clip_samples)
+    end = start + clip_samples
+    return signal[start:end]
+
+def inject_noise(signal, snr_db):
+    """
+    Add white Gaussian noise to `signal` to get the desired SNR in dB.
+    Assumes `signal` is a 1D float numpy array.
+    """
+
+    # make sure we work in float
+    signal = signal.astype(float)
+
+    # signal power (mean square)
+    signal_power = np.mean(signal ** 2)
+
+    if signal_power == 0:
+        # silent signal, just return it (or raise)
+        return signal
+
+    # desired noise power
+    noise_power = signal_power / (10 ** (snr_db / 10))
+
+    # noise standard deviation
+    noise_std = np.sqrt(noise_power)
+
+    # generate white Gaussian noise
+    noise = np.random.normal(0.0, noise_std, size=signal.shape)
+
+    # noisy signal
+    return signal + noise
+
 
 def extract_spectrogram(signal, sample_rate):
     if signal.ndim > 1:

@@ -75,10 +75,12 @@ def build_hashes(peaks, freqs, song_id=0, fan_out=5,
         candidates.sort(key=lambda x: -x[2])
         # pick top fan_out strongest candidates
         strongest = candidates[:fan_out]
+    
+        if song_id is not None:
+            for (_, f_b, _, dt) in strongest:
+                h = _hash_triplet(f_a, f_b, dt)
+                fingerprints.append((np.uint32(h), song_id, t_a))
 
-        for (_, f_b, _, dt) in strongest:
-            h = _hash_triplet(f_a, f_b, dt)
-            fingerprints.append((np.uint32(h), song_id, t_a))
     return fingerprints
 
 def add_hashes_to_table(table, fingerprints):
