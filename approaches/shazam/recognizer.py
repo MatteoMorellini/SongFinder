@@ -188,15 +188,11 @@ class ShazamRecognizer(BaseSongRecognizer):
         t0 = time.perf_counter()
         # song_id -> {offset -> count}
         offset_votes = defaultdict(lambda: defaultdict(int))
-        seen_hashes = set()
         num_matches = 0
         num_db_hits = 0
         
         for h, _, t_anchor in sampled_fingerprints:
             h = np.uint32(h)
-            if h in seen_hashes:
-                continue
-            seen_hashes.add(h)
             
             if h in self.hash_table:
                 num_db_hits += 1
@@ -204,7 +200,7 @@ class ShazamRecognizer(BaseSongRecognizer):
                     offset = t_anchor_match - t_anchor
                     offset_votes[song_id][offset] += 1
                     num_matches += 1
-        
+
         timings['hash_matching_and_voting'] = time.perf_counter() - t0
         print(f"Hash matching and voting: {timings['hash_matching_and_voting']:.4f}s")
         print(f"  Query hashes checked: {len(sampled_fingerprints)}")
