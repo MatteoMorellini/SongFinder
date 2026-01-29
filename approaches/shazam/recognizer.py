@@ -83,20 +83,36 @@ class ShazamRecognizer(BaseSongRecognizer):
                 count += 1
         return count
     
-    def _sample_query_hashes(self, fingerprints, max_hashes):
-        """
-        Strategically sample query hashes for faster lookup.
-        
-        Strategy: Take evenly spaced hashes across the query to ensure
-        temporal coverage while limiting total lookups.
-        """
+    def _sample_query_hashes(self, fingerprints, max_hashes, n_bins=20):
         if len(fingerprints) <= max_hashes:
             return fingerprints
-        
-        # Evenly space samples across the query
-        step = len(fingerprints) / max_hashes
-        indices = [int(i * step) for i in range(max_hashes)]
-        return [fingerprints[i] for i in indices]
+
+        # fingerprints: (h, ..., t_anchor)
+        times = np.array([t for (_, _, t) in fingerprints])
+        tmin, tmax = times.min(), times.max() + 1e-9
+        edges = np.linspace(tmin, tmax, n_bins + 1)
+
+        per_bin = max_hashes // n_bins
+        chosen = []
+
+        for b in range(n_bins):
+            lo, hi = edges[b], edges[b+1]
+            bin_fps = [fp for fp in fingerprints if lo <= fp[2] < hi]
+            if not bin_fps:
+                continue
+
+            # score by rarity in DB (smaller posting list = better)
+            bin_fps.sort(key=lambda fp: len(self.hash_table.get(np.uint32(fp[0]), ())))
+            chosen.extend(bin_fps[:per_bin])
+
+        # if still short, fill with rarest overall
+        if len(chosen) < max_hashes:
+            remaining = [fp for fp in fingerprints if fp not in chosen]
+            remaining.sort(key=lambda fp: len(self.hash_table.get(np.uint32(fp[0]), ())))
+            chosen.extend(remaining[:(max_hashes - len(chosen))])
+
+        return chosen[:max_hashes]
+
     
     def recognize(
         self, 
