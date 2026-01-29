@@ -4,6 +4,7 @@ from typing import Optional, Tuple, Dict, Any
 import numpy as np
 import librosa
 from tqdm import tqdm
+import heapq
 
 from approaches.base import BaseSongRecognizer
 from .config import BANDS, N_FFT, TARGET_SR, HOP_LENGTH
@@ -34,6 +35,8 @@ class ShazamRecognizer(BaseSongRecognizer):
         self.hash_table: Dict[int, list] = {}
         self.song_table: Dict[str, int] = {}
         self.max_query_hashes = max_query_hashes
+        self.freqs = np.fft.rfftfreq(N_FFT, d=1.0 / TARGET_SR)
+
         
     @property
     def name(self) -> str:
@@ -66,10 +69,9 @@ class ShazamRecognizer(BaseSongRecognizer):
         signal, sr = load_audio(audio_path)
         spectrogram = extract_spectrogram(signal, sr)
         peaks = find_peaks(spectrogram, BANDS)
-        freqs = librosa.fft_frequencies(sr=TARGET_SR, n_fft=N_FFT)
         
         song_id = get_song_id(self.song_table, song_name)
-        fingerprints = build_hashes(peaks, freqs, song_id=song_id)
+        fingerprints = build_hashes(peaks, self.freqs, song_id=song_id)
         add_hashes_to_table(self.hash_table, fingerprints)
     
     def index_folder(self, folder: Path, pattern: str = "*.flac") -> int:
@@ -84,34 +86,45 @@ class ShazamRecognizer(BaseSongRecognizer):
         return count
     
     def _sample_query_hashes(self, fingerprints, max_hashes, n_bins=20):
-        if len(fingerprints) <= max_hashes:
+        n = len(fingerprints)
+        if n <= max_hashes:
             return fingerprints
 
-        # fingerprints: (h, ..., t_anchor)
-        times = np.array([t for (_, _, t) in fingerprints])
-        tmin, tmax = times.min(), times.max() + 1e-9
-        edges = np.linspace(tmin, tmax, n_bins + 1)
+        # Precompute times efficiently
+        times = np.fromiter((fp[2] for fp in fingerprints), dtype=np.int32, count=n)
+        tmin = int(times.min())
+        tmax = int(times.max()) + 1  # avoid div by 0
 
-        per_bin = max_hashes // n_bins
+        # Assign each fp to a time bin in ONE pass
+        denom = max(1, (tmax - tmin))
+        bin_idx = ((times - tmin) * n_bins) // denom
+        bin_idx = np.clip(bin_idx, 0, n_bins - 1)
+
+        bins = [[] for _ in range(n_bins)]
+        for fp, b in zip(fingerprints, bin_idx):
+            bins[int(b)].append(fp)
+
+        per_bin = max(1, max_hashes // n_bins)
+
+        # Key: rarity in DB (short posting list = better)
+        def rarity(fp):
+            return len(self.hash_table.get(np.uint32(fp[0]), ()))
+
         chosen = []
-
-        for b in range(n_bins):
-            lo, hi = edges[b], edges[b+1]
-            bin_fps = [fp for fp in fingerprints if lo <= fp[2] < hi]
+        for bin_fps in bins:
             if not bin_fps:
                 continue
+            # nsmallest is faster than sorting whole bin when you only need k
+            chosen.extend(heapq.nsmallest(per_bin, bin_fps, key=rarity))
 
-            # score by rarity in DB (smaller posting list = better)
-            bin_fps.sort(key=lambda fp: len(self.hash_table.get(np.uint32(fp[0]), ())))
-            chosen.extend(bin_fps[:per_bin])
-
-        # if still short, fill with rarest overall
+        # Fill remaining slots with rarest overall (avoid O(n*k) checks)
         if len(chosen) < max_hashes:
-            remaining = [fp for fp in fingerprints if fp not in chosen]
-            remaining.sort(key=lambda fp: len(self.hash_table.get(np.uint32(fp[0]), ())))
-            chosen.extend(remaining[:(max_hashes - len(chosen))])
+            chosen_set = set(chosen)  # tuples are hashable
+            remaining = [fp for fp in fingerprints if fp not in chosen_set]
+            chosen.extend(heapq.nsmallest(max_hashes - len(chosen), remaining, key=rarity))
 
         return chosen[:max_hashes]
+
 
     
     def recognize(
@@ -161,12 +174,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         print(f"Find peaks: {timings['find_peaks']:.4f}s")
         
         t0 = time.perf_counter()
-        freqs = librosa.fft_frequencies(sr=TARGET_SR, n_fft=N_FFT)
-        timings['compute_frequencies'] = time.perf_counter() - t0
-        print(f"Compute frequencies: {timings['compute_frequencies']:.4f}s")
-        
-        t0 = time.perf_counter()
-        fingerprints = build_hashes(peaks, freqs)
+        fingerprints = build_hashes(peaks, self.freqs)
         timings['build_hashes'] = time.perf_counter() - t0
         print(f"Build hashes: {timings['build_hashes']:.4f}s")
         
