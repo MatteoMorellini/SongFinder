@@ -1,3 +1,5 @@
+downloads/
+scripts/download_songs.py
 myenv/
 data/
 *.db
