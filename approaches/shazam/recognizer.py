@@ -88,7 +88,8 @@ class ShazamRecognizer(BaseSongRecognizer):
         self, 
         query_path: Path, 
         clip_length_sec: Optional[float] = None,
-        snr_db: Optional[float] = None
+        snr_db: Optional[float] = None,
+        top_songs_entropy: Optional[int] = 10,
     ) -> Tuple[Optional[str], float, Dict[str, Any]]:
     
         """
@@ -135,18 +136,27 @@ class ShazamRecognizer(BaseSongRecognizer):
                 song_scores[song_id] = score
             
         if song_scores:
-            # Extract songs and scores in order
             songs = list(song_scores.keys())
             scores = np.array(list(song_scores.values()), dtype=np.float64)
-            
-            # Apply softmax
-            exp_scores = np.exp(scores - np.max(scores))
-            probabilities = exp_scores / np.sum(exp_scores)
-            
-            # Get song with highest probability (= highest score)
-            best_idx = np.argmax(probabilities)
+
+            best_idx = int(np.argmax(scores))
             best_song_id = songs[best_idx]
-            best_confidence = probabilities[best_idx]
+
+            # Take top-K scores (highest first)
+            top_idx = np.argsort(scores)[::-1][:top_songs_entropy]
+            top_scores = scores[top_idx]
+
+            sum_s = float(np.sum(top_scores))
+            if sum_s <= 0 or len(top_scores) == 0:
+                best_confidence = 0.0
+            else:
+                p = top_scores / sum_s
+                eps = 1e-12
+                H = -float(np.sum(p * np.log(p + eps)))
+                H_norm = H / np.log(len(p)) if len(p) > 1 else 0.0
+                best_confidence = float(1.0 - H_norm)
+                best_confidence = max(0.0, min(1.0, best_confidence))
+
         else:
             best_song_id = None
             best_confidence = 0.0

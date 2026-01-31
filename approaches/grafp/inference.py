@@ -119,7 +119,7 @@ def search(index, query_fingerprints, k=10):
     return distances, indices
 
 
-def recognize(query_fp, db_fingerprints, db_metadata, k=10):
+def recognize(query_fp, db_fingerprints, db_metadata, k=10, top_songs_entropy=10):
     """Recognize a song from query fingerprints using FAISS."""
     if not FAISS_AVAILABLE:
         return _recognize_numpy(query_fp, db_fingerprints, db_metadata, k)
@@ -127,10 +127,10 @@ def recognize(query_fp, db_fingerprints, db_metadata, k=10):
     index = build_index(db_fingerprints, use_gpu=False)
     distances, indices = search(index, query_fp, k)
     
-    return _vote_for_song(indices, db_metadata)
+    return _vote_for_song(indices, db_metadata, top_songs_entropy)
 
 
-def _recognize_numpy(query_fp, db_fingerprints, db_metadata, k=10):
+def _recognize_numpy(query_fp, db_fingerprints, db_metadata, k=10, top_songs_entropy=10):
     """Fallback recognition using numpy (slower but no faiss dependency)."""
     from collections import Counter
     
@@ -140,10 +140,10 @@ def _recognize_numpy(query_fp, db_fingerprints, db_metadata, k=10):
         indices = np.argsort(distances)[:k]
         all_indices.append(indices)
     
-    return _vote_for_song(np.array(all_indices), db_metadata)
+    return _vote_for_song(np.array(all_indices), db_metadata, top_songs_entropy)
 
 
-def _vote_for_song(indices, db_metadata):
+def _vote_for_song(indices, db_metadata, top_songs_entropy):
     """Vote by counting matches per song."""
     from collections import Counter
     votes = Counter()
@@ -156,17 +156,24 @@ def _vote_for_song(indices, db_metadata):
                 votes[song] += 1
     
     if votes:
-        # Get all counts for softmax calculation
-        counts = np.array(list(votes.values()), dtype=np.float64)
-        
-        # Compute softmax
-        exp_counts = np.exp(counts - np.max(counts))
-        probabilities = exp_counts / np.sum(exp_counts)
-        
-        # Get top song (Counter.most_common maintains order)
-        best_song = votes.most_common(1)[0][0]
-        confidence = probabilities[0]  # First element has highest confidence
-        
+        best_song, best_count = votes.most_common(1)[0]
+        # restrict to top-K to avoid long tails dominating entropy
+
+        items = votes.most_common(top_songs_entropy) if top_songs_entropy else list(votes.items()) 
+        # None to consider the whole domain in entropy metric
+        counts = np.array([c for _, c in items], dtype=np.float64)
+
+        sum_counts = counts.sum()
+        if sum_counts <= 0 or len(counts) == 0:
+            confidence = 0.0
+        else:
+            p = counts / sum_counts
+            eps = 1e-12  # avoid log(0)
+            H = -np.sum(p * np.log(p + eps))  # entropy
+            H_norm = H / np.log(len(p)) if len(p) > 1 else 0.0  # normalize to [0,1]
+            confidence = float(1.0 - H_norm)
+            confidence = max(0.0, min(1.0, confidence))  # clamp for safety
+
         return best_song, confidence
-    
+        
     return None, 0.0
