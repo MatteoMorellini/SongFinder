@@ -146,7 +146,7 @@ log_success("Shazam recognizer loaded successfully")
 # GraFP recognizer
 # -----------------------------
 
-from approaches.grafp.inference import load_model, load_fingerprints, recognize as grafp_recognize
+from approaches.grafp.inference import load_model, load_fingerprints, build_index, recognize as grafp_recognize
 from approaches.grafp.util import load_config
 from approaches.grafp.modules.transformations import AudioTransform
 import torch
@@ -162,6 +162,7 @@ log_detail("Database path", str(db_path))
 log_detail("Checkpoint", str(CHECKPOINT))
 try:
     db_fp, db_meta = load_fingerprints(db_path)
+    faiss_index = build_index(db_fp, use_gpu=False)
     log_success("GraFP recognizer loaded successfully")
 except Exception as e:
     log.error(f"Error loading database from {db_path}: {e}")
@@ -200,7 +201,7 @@ def run_recognizer(method: str, mp3_path: str) -> RecognizerResult:
         with torch.no_grad():
             _, _, query_fp, _ = model(segments, segments)
         
-        title, confidence = grafp_recognize(query_fp.cpu().numpy(), db_fp, db_meta, top_songs_entropy = TOP_SONGS_ENTROPY)
+        title, confidence = grafp_recognize(query_fp.cpu().numpy(), db_fp, db_meta, faiss_index, top_songs_entropy = TOP_SONGS_ENTROPY)
 
     # Log result
     if title:

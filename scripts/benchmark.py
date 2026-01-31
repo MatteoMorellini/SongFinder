@@ -263,7 +263,7 @@ def benchmark_grafp(
     """Benchmark GraFP approach."""
     from approaches.grafp import load_config, load_model
     from approaches.grafp.modules.transformations import AudioTransform
-    from approaches.grafp.inference import recognize
+    from approaches.grafp.inference import recognize, build_index
     
     print("\n=== GraFP Benchmark ===")
     
@@ -277,6 +277,8 @@ def benchmark_grafp(
     from approaches.grafp.inference import load_fingerprints
     db_fp, db_meta = load_fingerprints(db_dir / "grafp")
     db_load_time = (time.time() - start) * 1000
+
+    index = build_index(db_fp, use_gpu=False)
     
     results = BenchmarkResults(
         approach="GraFP",
@@ -286,7 +288,7 @@ def benchmark_grafp(
     )
     
     print(f"Loaded {db_fp.shape[0]} fingerprints ({results.n_db_songs} songs) in {db_load_time:.1f}ms")
-    
+
     model.eval()
     
     for condition in conditions:
@@ -312,7 +314,7 @@ def benchmark_grafp(
                 with torch.no_grad():
                     _, _, query_fp, _ = model(segments, segments)
                 
-                song, votes = recognize(query_fp.cpu().numpy(), db_fp, db_meta)
+                song, votes = recognize(query_fp.cpu().numpy(), db_fp, db_meta, index)
                 
                 query_time = (time.time() - start) * 1000
                 query_times.append(query_time)

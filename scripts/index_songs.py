@@ -129,7 +129,7 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
 def main():
     parser = argparse.ArgumentParser(description='Index songs for recognition')
     parser.add_argument('--approach', '-a', choices=['shazam', 'grafp'], required=True)
-    parser.add_argument('--folder', '-f', type=str, required=True)
+    parser.add_argument('--folder', '-f', type=str, default='./downloads')
     parser.add_argument('--output', '-o', type=str, default='./fingerprints')
     parser.add_argument('--pattern', '-p', type=str, default='*.flac')
     parser.add_argument('--checkpoint', type=str, default=None, help='GraFP checkpoint')

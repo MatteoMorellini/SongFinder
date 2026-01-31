@@ -14,6 +14,9 @@ from .db import load_db, save_db, get_song_id
 from .audio import load_audio, extract_spectrogram, find_peaks, cut_audio, inject_noise, extract_spectrogram_fast
 from .hashing import build_hashes, add_hashes_to_table
 
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3
+
 
 class Timer:
     """Context manager for timing code blocks with optional debug printing."""
@@ -83,6 +86,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         songs_path = str(path / "songs.db") if path else self.songs_db_path
         self.hash_table = load_db(db_path)
         self.song_table = load_db(songs_path)
+        print(self.song_table)
         
     def save(self, path: Optional[Path] = None) -> None:
         """Save databases to disk."""
@@ -93,7 +97,15 @@ class ShazamRecognizer(BaseSongRecognizer):
     
     def index_song(self, audio_path: Path) -> None:
         """Add a single song to the database."""
-        song_name = audio_path.stem
+        meta = MP3(audio_path, ID3=ID3)
+        song_name = ''
+        if "TIT2" in meta.tags:
+            song_name = str(meta.tags["TIT2"].text[0])
+        else:
+            song_name = audio_path.stem
+
+        print(f"song_name is {song_name}")
+
         if song_name in self.song_table:
             return  # Already indexed
             
@@ -166,8 +178,6 @@ class ShazamRecognizer(BaseSongRecognizer):
         top_songs_entropy: Optional[int] = 10,
         debug: bool = False,
     ) -> Tuple[Optional[str], float, Dict[str, Any]]:
-
-        print(debug)
     
         """
         Recognize a song from an audio query.

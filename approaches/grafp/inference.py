@@ -8,6 +8,7 @@ import os
 import numpy as np
 import torch
 from pathlib import Path
+import time
 
 try:
     import faiss
@@ -119,13 +120,16 @@ def search(index, query_fingerprints, k=10):
     return distances, indices
 
 
-def recognize(query_fp, db_fingerprints, db_metadata, k=10, top_songs_entropy=10):
+def recognize(query_fp, db_fingerprints, db_metadata, index, k=10, top_songs_entropy=10):
+
     """Recognize a song from query fingerprints using FAISS."""
     if not FAISS_AVAILABLE:
         return _recognize_numpy(query_fp, db_fingerprints, db_metadata, k)
-    
-    index = build_index(db_fingerprints, use_gpu=False)
+
+    t0 = time.perf_counter()
     distances, indices = search(index, query_fp, k)
+    timings = time.perf_counter() - t0
+    print(f"To index: {timings:.4f}s")
     
     return _vote_for_song(indices, db_metadata, top_songs_entropy)
 
