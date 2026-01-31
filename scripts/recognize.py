@@ -51,7 +51,8 @@ def main():
         song_name, score, metadata = recognizer.recognize(
             query_path,
             clip_length_sec=args.clip_length,
-            snr_db=args.snr
+            snr_db=args.snr,
+            debug = True
         )
         
         if song_name:

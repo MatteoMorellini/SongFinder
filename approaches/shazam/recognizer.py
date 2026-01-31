@@ -1,16 +1,47 @@
 from collections import defaultdict, Counter
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
 import numpy as np
 import librosa
 from tqdm import tqdm
 import heapq
+import time
 
 from approaches.base import BaseSongRecognizer
 from .config import BANDS, N_FFT, TARGET_SR, HOP_LENGTH
 from .db import load_db, save_db, get_song_id
 from .audio import load_audio, extract_spectrogram, find_peaks, cut_audio, inject_noise, extract_spectrogram_fast
 from .hashing import build_hashes, add_hashes_to_table
+
+
+class Timer:
+    """Context manager for timing code blocks with optional debug printing."""
+    
+    def __init__(self, debug: bool = False):
+        self.debug = debug
+        self.timings: Dict[str, float] = {}
+        self._current_label: Optional[str] = None
+        self._start_time: float = 0
+    
+    @contextmanager
+    def measure(self, label: str):
+        """Time a block of code and optionally print the result."""
+        start = time.perf_counter()
+        yield
+        elapsed = time.perf_counter() - start
+        self.timings[label] = elapsed
+        if self.debug:
+            print(f"{label}: {elapsed:.4f}s")
+    
+    def log(self, message: str):
+        """Print a message only if debug mode is enabled."""
+        if self.debug:
+            print(message)
+    
+    @property
+    def total(self) -> float:
+        return sum(self.timings.values())
 
 
 class ShazamRecognizer(BaseSongRecognizer):
@@ -133,131 +164,115 @@ class ShazamRecognizer(BaseSongRecognizer):
         clip_length_sec: Optional[float] = None,
         snr_db: Optional[float] = None,
         top_songs_entropy: Optional[int] = 10,
+        debug: bool = False,
     ) -> Tuple[Optional[str], float, Dict[str, Any]]:
+
+        print(debug)
     
         """
         Recognize a song from an audio query.
         
+        Args:
+            query_path: Path to the audio file to recognize
+            clip_length_sec: Optional clip length in seconds
+            snr_db: Optional SNR for noise injection
+            top_songs_entropy: Number of top songs for entropy calculation
+            debug: If True, print timing information for each step
+        
         Returns:
             Tuple of (song_name, score, metadata)
         """
-        import time
-        
-        timings = {}
+        timer = Timer(debug=debug)
         
         # Load and preprocess query audio
-        t0 = time.perf_counter()
-        signal, sample_rate = load_audio(query_path)
-        timings['load_audio'] = time.perf_counter() - t0
-        print(f"Load audio: {timings['load_audio']:.4f}s")
+        with timer.measure("Load audio"):
+            signal, sample_rate = load_audio(query_path)
         
         if clip_length_sec is not None:
-            t0 = time.perf_counter()
-            signal = cut_audio(signal, sample_rate, clip_length_sec)
-            timings['cut_audio'] = time.perf_counter() - t0
-            print(f"Cut audio: {timings['cut_audio']:.4f}s")
+            with timer.measure("Cut audio"):
+                signal = cut_audio(signal, sample_rate, clip_length_sec)
         
         if snr_db is not None:
-            t0 = time.perf_counter()
-            signal = inject_noise(signal, snr_db)
-            timings['inject_noise'] = time.perf_counter() - t0
-            print(f"Inject noise: {timings['inject_noise']:.4f}s")
+            with timer.measure("Inject noise"):
+                signal = inject_noise(signal, snr_db)
         
         # Extract fingerprints from query
-        t0 = time.perf_counter()
-        spectrogram = extract_spectrogram_fast(signal, sample_rate)
-        timings['extract_spectrogram'] = time.perf_counter() - t0
-        print(f"Extract spectrogram: {timings['extract_spectrogram']:.4f}s")
+        with timer.measure("Extract spectrogram"):
+            spectrogram = extract_spectrogram_fast(signal, sample_rate)
         
-        t0 = time.perf_counter()
-        peaks = find_peaks(spectrogram, BANDS)
-        timings['find_peaks'] = time.perf_counter() - t0
-        print(f"Find peaks: {timings['find_peaks']:.4f}s")
+        with timer.measure("Find peaks"):
+            peaks = find_peaks(spectrogram, BANDS)
         
-        t0 = time.perf_counter()
-        fingerprints = build_hashes(peaks, self.freqs)
-        timings['build_hashes'] = time.perf_counter() - t0
-        print(f"Build hashes: {timings['build_hashes']:.4f}s")
+        with timer.measure("Build hashes"):
+            fingerprints = build_hashes(peaks, self.freqs)
         
         # Sample query hashes for faster lookup
-        t0 = time.perf_counter()
-        sampled_fingerprints = self._sample_query_hashes(fingerprints, self.max_query_hashes)
-        timings['sample_hashes'] = time.perf_counter() - t0
-        print(f"Sample hashes: {len(fingerprints)} -> {len(sampled_fingerprints)} ({timings['sample_hashes']:.4f}s)")
+        with timer.measure("Sample hashes"):
+            sampled_fingerprints = self._sample_query_hashes(fingerprints, self.max_query_hashes)
+        timer.log(f"  Hashes: {len(fingerprints)} -> {len(sampled_fingerprints)}")
         
         # Match against database and vote in single pass
-        t0 = time.perf_counter()
-        # song_id -> {offset -> count}
-        offset_votes = defaultdict(lambda: defaultdict(int))
-        num_matches = 0
-        num_db_hits = 0
-        
-        for h, _, t_anchor in sampled_fingerprints:
-            h = np.uint32(h)
+        with timer.measure("Hash matching and voting"):
+            # song_id -> {offset -> count}
+            offset_votes = defaultdict(lambda: defaultdict(int))
+            num_matches = 0
+            num_db_hits = 0
             
-            if h in self.hash_table:
-                num_db_hits += 1
-                for (song_id, t_anchor_match) in self.hash_table[h]:
-                    offset = t_anchor_match - t_anchor
-                    offset_votes[song_id][offset] += 1
-                    num_matches += 1
+            for h, _, t_anchor in sampled_fingerprints:
+                h = np.uint32(h)
+                
+                if h in self.hash_table:
+                    num_db_hits += 1
+                    for (song_id, t_anchor_match) in self.hash_table[h]:
+                        offset = t_anchor_match - t_anchor
+                        offset_votes[song_id][offset] += 1
+                        num_matches += 1
 
-        timings['hash_matching_and_voting'] = time.perf_counter() - t0
-        print(f"Hash matching and voting: {timings['hash_matching_and_voting']:.4f}s")
-        print(f"  Query hashes checked: {len(sampled_fingerprints)}")
-        print(f"  Database hits: {num_db_hits}")
-        print(f"  Total matches: {num_matches}")
-        print(f"  Candidate songs: {len(offset_votes)}")
+        timer.log(f"  Query hashes checked: {len(sampled_fingerprints)}")
+        timer.log(f"  Database hits: {num_db_hits}")
+        timer.log(f"  Total matches: {num_matches}")
+        timer.log(f"  Candidate songs: {len(offset_votes)}")
         
         # Find best match by getting peak offset count for each song
-        t0 = time.perf_counter()
-        song_scores = {}
-        for song_id, offset_counts in offset_votes.items():
-            # Get the maximum vote count (most common offset)
-            song_scores[song_id] = max(offset_counts.values())
+        with timer.measure("Scoring preparation"):
+            song_scores = {}
+            for song_id, offset_counts in offset_votes.items():
+                # Get the maximum vote count (most common offset)
+                song_scores[song_id] = max(offset_counts.values())
         
-        timings['scoring_preparation'] = time.perf_counter() - t0
-        print(f"Scoring preparation: {timings['scoring_preparation']:.4f}s")
-        
-        t0 = time.perf_counter()
-        if song_scores:
-            songs = list(song_scores.keys())
-            scores = np.array(list(song_scores.values()), dtype=np.float64)
+        with timer.measure("Softmax scoring"):
+            if song_scores:
+                songs = list(song_scores.keys())
+                scores = np.array(list(song_scores.values()), dtype=np.float64)
 
-            best_idx = int(np.argmax(scores))
-            best_song_id = songs[best_idx]
+                best_idx = int(np.argmax(scores))
+                best_song_id = songs[best_idx]
 
-            # Take top-K scores (highest first)
-            top_idx = np.argsort(scores)[::-1][:top_songs_entropy]
-            top_scores = scores[top_idx]
+                # Take top-K scores (highest first)
+                top_idx = np.argsort(scores)[::-1][:top_songs_entropy]
+                top_scores = scores[top_idx]
 
-            sum_s = float(np.sum(top_scores))
-            if sum_s <= 0 or len(top_scores) == 0:
-                best_confidence = 0.0
+                sum_s = float(np.sum(top_scores))
+                if sum_s <= 0 or len(top_scores) == 0:
+                    best_confidence = 0.0
+                else:
+                    p = top_scores / sum_s
+                    eps = 1e-12
+                    H = -float(np.sum(p * np.log(p + eps)))
+                    H_norm = H / np.log(len(p)) if len(p) > 1 else 0.0
+                    best_confidence = float(1.0 - H_norm)
+                    best_confidence = max(0.0, min(1.0, best_confidence))
+
             else:
-                p = top_scores / sum_s
-                eps = 1e-12
-                H = -float(np.sum(p * np.log(p + eps)))
-                H_norm = H / np.log(len(p)) if len(p) > 1 else 0.0
-                best_confidence = float(1.0 - H_norm)
-                best_confidence = max(0.0, min(1.0, best_confidence))
-
-        else:
-            best_song_id = None
-            best_confidence = 0.0
-        
-        timings['softmax_scoring'] = time.perf_counter() - t0
-        print(f"Softmax scoring: {timings['softmax_scoring']:.4f}s")
+                best_song_id = None
+                best_confidence = 0.0
         
         # Get song name from ID
-        t0 = time.perf_counter()
-        invert_song_table = {v: k for k, v in self.song_table.items()}
-        best_song_name = invert_song_table.get(best_song_id)
-        timings['lookup'] = time.perf_counter() - t0
-        print(f"Lookup: {timings['lookup']:.4f}s")
+        with timer.measure("Lookup"):
+            invert_song_table = {v: k for k, v in self.song_table.items()}
+            best_song_name = invert_song_table.get(best_song_id)
         
-        total_time = sum(timings.values())
-        print(f"Total recognition time: {total_time:.4f}s")
+        timer.log(f"Total recognition time: {timer.total:.4f}s")
         
         metadata = {
             "num_query_hashes": len(fingerprints),
@@ -267,8 +282,8 @@ class ShazamRecognizer(BaseSongRecognizer):
             "num_candidate_songs": len(offset_votes),
             "best_song_offset_distribution": dict(offset_votes.get(best_song_id, {})) if best_song_id else {},
             "best_song_score": song_scores.get(best_song_id, 0),
-            "timings": timings,
-            "total_time": total_time,
+            "timings": timer.timings,
+            "total_time": timer.total,
         }
         
         return best_song_name, float(best_confidence), metadata
