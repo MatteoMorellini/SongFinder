@@ -14,8 +14,41 @@ Usage:
 import argparse
 from pathlib import Path
 import sys
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray):
+    db_path = output_dir / "db.mm"
+    shape_path = output_dir / "db_shape.npy"
+    meta_path = output_dir / "db_metadata.npy"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if db_path.exists() and shape_path.exists() and meta_path.exists():
+        old_shape = tuple(np.load(shape_path))
+        old_meta = np.load(meta_path, allow_pickle=True)
+        old_db = np.memmap(db_path, dtype="float32", mode="r", shape=old_shape)
+
+        # build combined
+        combined_shape = (old_shape[0] + new_fp.shape[0], old_shape[1])
+        combined_meta = np.concatenate([old_meta, new_meta])
+
+        # rewrite db.mm with combined content
+        new_db = np.memmap(db_path, dtype="float32", mode="w+", shape=combined_shape)
+        new_db[:old_shape[0]] = old_db[:]
+        new_db[old_shape[0]:] = new_fp
+        new_db.flush()
+
+        np.save(shape_path, np.array(combined_shape))
+        np.save(meta_path, combined_meta)
+    else:
+        # first time
+        new_db = np.memmap(db_path, dtype="float32", mode="w+", shape=new_fp.shape)
+        new_db[:] = new_fp
+        new_db.flush()
+        np.save(shape_path, np.array(new_fp.shape))
+        np.save(meta_path, new_meta)
 
 
 def index_shazam(folder: Path, output_dir: Path, pattern: str):
@@ -109,17 +142,9 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
     if fingerprints:
         fp_array = np.concatenate(fingerprints).astype('float32')
         
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Save in the format expected by load_fingerprints (inference.py)
-        # Using memmap for better scalability
-        arr = np.memmap(output_dir / "db.mm", dtype='float32', mode='w+', shape=fp_array.shape)
-        arr[:] = fp_array[:]
-        arr.flush()
-        
-        np.save(output_dir / "db_shape.npy", fp_array.shape)
-        np.save(output_dir / "db_metadata.npy", np.array(metadata))
-        
+        new_meta = np.array(metadata)
+        append_grafp_db(output_dir, fp_array, new_meta)
+
         print(f"✓ Saved {len(audio_files)} songs ({fp_array.shape[0]} segments) to {output_dir}")
         return len(audio_files)
     
