@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SongFinder - Audio Recognition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF006E;
+            --primary-dark: #D90058;
+            --secondary: #00F5FF;
+            --bg: #0A0E1A;
+            --bg-lighter: #151923;
+            --bg-card: #1A1F2E;
+            --text: #E8EEF2;
+            --text-dim: #8892A6;
+            --success: #00FF88;
+            --warning: #FFB800;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg: #F5F7FA;
+            --bg-lighter: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text: #1A1F2E;
+            --text-dim: #6B7280;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 245, 255, 0.08) 0%, transparent 50%);
+            animation: bgPulse 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .tagline {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            font-weight: 300;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-lighter);
+            transform: scale(1.1);
+        }
+
+        .toolbar-icon {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-dim);
+        }
+
+        /* Main card */
+        .recognition-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .recognition-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .recognition-card.active::before {
+            opacity: 1;
+        }
+
+        /* Method selector */
+        .method-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: var(--bg-lighter);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Archivo', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .method-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .method-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);
+        }
+
+        /* Recording button */
+        .record-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .record-btn {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(255, 0, 110, 0.4);
+        }
+
+        .record-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 50px rgba(255, 0, 110, 0.5);
+        }
+
+        .record-btn:active {
+            transform: scale(0.95);
+        }
+
+        .record-btn.recording {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 110, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 30px rgba(255, 0, 110, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 110, 0);
+            }
+        }
+
+        .record-icon {
+            width: 50px;
+            height: 50px;
+            fill: white;
+            transition: transform 0.3s;
+        }
+
+        .record-btn.recording .record-icon {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            min-height: 28px;
+        }
+
+        .status-text.listening {
+            color: var(--secondary);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Audio Visualizer */
+        .visualizer-container {
+            margin: 20px 0;
+            height: 80px;
+            background: var(--bg-lighter);
+            border-radius: 12px;
+            padding: 10px;
+            display: none;
+        }
+
+        .visualizer-container.active {
+            display: block;
+        }
+
+        #visualizer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Interval selector */
+        .interval-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .interval-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .interval-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .interval-btn {
+            padding: 10px;
+            background: var(--bg-lighter);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .interval-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .interval-btn.active {
+            background: var(--secondary);
+            color: var(--bg);
+            border-color: var(--secondary);
+        }
+
+        /* Statistics Dashboard */
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-lighter);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Results section */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+
+        .results-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: var(--bg-lighter);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .results-section {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: var(--bg-lighter);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .result-title.no-match {
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .confidence-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .confidence-high {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success);
+        }
+
+        .confidence-medium {
+            background: rgba(255, 184, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .confidence-low {
+            background: rgba(136, 146, 166, 0.2);
+            color: var(--text-dim);
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-dim);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+            animation: slideInRight 0.3s;
+            z-index: 1000;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 3px solid var(--primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .modal-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-lighter);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .modal-hint {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);
+        }
+
+        /* Keyboard shortcuts hint */
+        .shortcuts-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            opacity: 0;
+            animation: fadeInOut 3s ease-in-out;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .shortcuts-hint.show {
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-top: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .recognition-card {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .record-btn {
+                width: 120px;
+                height: 120px;
+            }
+
+            .interval-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .toolbar {
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="toolbar-btn" id="themeToggle" title="Toggle theme">
+            <svg class="toolbar-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" id="settingsBtn" title="Settings">
+            <svg class="toolbar-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Settings</h2>
+                <button class="close-btn" id="closeSettings">×</button>
+            </div>
+            
+            <div class="modal-group">
+                <label class="modal-label">API URL</label>
+                <input 
+                    type="text" 
+                    class="modal-input" 
+                    id="apiUrlInput"
+                    placeholder="https://your-domain.com/recognize"
+                />
+                <div class="modal-hint">
+                    Current: <span id="currentApiUrl"></span>
+                </div>
+            </div>
+
+            <div class="modal-group">
+                <label class="modal-label">Database Info</label>
+                <div class="modal-hint" id="dbInfo">Loading...</div>
+            </div>
+
+            <button class="modal-btn" id="saveSettings">Save Settings</button>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Hint -->
+    <div class="shortcuts-hint" id="shortcutsHint">
+        Press Space to start/stop • E to export • C to clear
+    </div>
+
+    <div class="container">
+        <header>
+            <h1 class="logo">SongFinder</h1>
+            <p class="tagline">Continuous Audio Recognition</p>
+        </header>
+
+        <div class="recognition-card" id="mainCard">
+            <!-- Method Selection -->
+            <div class="method-selector">
+                <button class="method-btn active" data-method="shazam">Shazam</button>
+                <button class="method-btn" data-method="grafp">GraFP</button>
+            </div>
+
+            <!-- Recording Control -->
+            <div class="record-section">
+                <button class="record-btn" id="recordBtn">
+                    <svg class="record-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+                <div class="status-text" id="statusText">Tap to start listening</div>
+            </div>
+
+            <!-- Audio Visualizer -->
+            <div class="visualizer-container" id="visualizerContainer">
+                <canvas id="visualizer"></canvas>
+            </div>
+
+            <!-- Interval Selection -->
+            <div class="interval-section">
+                <div class="interval-label">Recognition Interval</div>
+                <div class="interval-options">
+                    <button class="interval-btn" data-interval="3">3s</button>
+                    <button class="interval-btn active" data-interval="5">5s</button>
+                    <button class="interval-btn" data-interval="10">10s</button>
+                    <button class="interval-btn" data-interval="15">15s</button>
+                </div>
+            </div>
+
+            <!-- Statistics Dashboard -->
+            <div class="stats-dashboard">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statMatched">0</div>
+                    <div class="stat-label">Matched</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statAvgConf">0%</div>
+                    <div class="stat-label">Avg Conf.</div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="results-section">
+                <div class="results-header">
+                    <div class="results-title">Recognition History</div>
+                    <div class="results-actions">
+                        <button class="action-btn" id="exportBtn">📥 Export</button>
+                        <button class="action-btn" id="clearBtn">🗑️ Clear</button>
+                    </div>
+                </div>
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎵</div>
+                        <p>No recognitions yet. Start listening to identify songs!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Powered by Shazam & GraFP Recognition Engines</p>
+        </footer>
+    </div>
+
+    <script>
+        // Configuration with localStorage support
+        const getApiUrl = () => {
+            const saved = localStorage.getItem('songfinder_api_url');
+            if (saved) return saved;
+            return `${window.location.protocol}//${window.location.host}/recognize`;
+        };
+
+        const CONFIG = {
+            get API_URL() { return getApiUrl(); },
+            set API_URL(value) { 
+                localStorage.setItem('songfinder_api_url', value);
+            },
+            MAX_RESULTS: 50,
+            RETRY_ATTEMPTS: 2
+        };
+
+        class SongFinderApp {
+            constructor() {
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.recognitionInterval = null;
+                this.selectedMethod = 'shazam';
+                this.intervalSeconds = 5;
+                this.results = [];
+                this.recordingStartTime = null;
+                this.audioContext = null;
+                this.analyser = null;
+                this.visualizerAnimationId = null;
+
+                this.initElements();
+                this.attachEventListeners();
+                this.updateApiUrlDisplay();
+                this.loadResults();
+                this.updateStats();
+                this.loadTheme();
+                this.showShortcutsHint();
+                this.fetchDbInfo();
+            }
+
+            initElements() {
+                this.recordBtn = document.getElementById('recordBtn');
+                this.statusText = document.getElementById('statusText');
+                this.resultsContainer = document.getElementById('resultsContainer');
+                this.mainCard = document.getElementById('mainCard');
+                this.methodBtns = document.querySelectorAll('.method-btn');
+                this.intervalBtns = document.querySelectorAll('.interval-btn');
+                
+                // Toolbar
+                this.themeToggle = document.getElementById('themeToggle');
+                this.settingsBtn = document.getElementById('settingsBtn');
+                
+                // Settings modal
+                this.settingsModal = document.getElementById('settingsModal');
+                this.closeSettingsBtn = document.getElementById('closeSettings');
+                this.apiUrlInput = document.getElementById('apiUrlInput');
+                this.saveSettingsBtn = document.getElementById('saveSettings');
+                this.currentApiUrl = document.getElementById('currentApiUrl');
+                this.dbInfo = document.getElementById('dbInfo');
+                
+                // Actions
+                this.exportBtn = document.getElementById('exportBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                
+                // Stats
+                this.statTotal = document.getElementById('statTotal');
+                this.statMatched = document.getElementById('statMatched');
+                this.statAvgConf = document.getElementById('statAvgConf');
+                
+                // Visualizer
+                this.visualizerContainer = document.getElementById('visualizerContainer');
+                this.visualizerCanvas = document.getElementById('visualizer');
+                this.visualizerCtx = this.visualizerCanvas.getContext('2d');
+            }
+
+            attachEventListeners() {
+                this.recordBtn.addEventListener('click', () => this.toggleRecording());
+                
+                this.methodBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.methodBtns.forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.selectedMethod = e.target.dataset.method;
+                    });
+                });
+
+                this.intervalBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.intervalBtns.forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.intervalSeconds = parseInt(e.target.dataset.interval);
+                    });
+                });
+
+                // Theme toggle
+                this.themeToggle.addEventListener('click', () => this.toggleTheme());
+
+                // Settings modal
+                this.settingsBtn.addEventListener('click', () => this.openSettings());
+                this.closeSettingsBtn.addEventListener('click', () => this.closeSettings());
+                this.settingsModal.addEventListener('click', (e) => {
+                    if (e.target === this.settingsModal) this.closeSettings();
+                });
+                this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+                
+                // Actions
+                this.exportBtn.addEventListener('click', () => this.exportResults());
+                this.clearBtn.addEventListener('click', () => this.clearResults());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+            }
+
+            handleKeyboard(e) {
+                // Ignore if typing in input
+                if (e.target.tagName === 'INPUT') return;
+                
+                switch(e.key.toLowerCase()) {
+                    case ' ':
+                        e.preventDefault();
+                        this.toggleRecording();
+                        break;
+                    case 'e':
+                        this.exportResults();
+                        break;
+                    case 'c':
+                        this.clearResults();
+                        break;
+                    case 's':
+                        this.openSettings();
+                        break;
+                    case 't':
+                        this.toggleTheme();
+                        break;
+                }
+            }
+
+            showShortcutsHint() {
+                const hint = document.getElementById('shortcutsHint');
+                hint.classList.add('show');
+                setTimeout(() => hint.classList.remove('show'), 3000);
+            }
+
+            loadTheme() {
+                const theme = localStorage.getItem('songfinder_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+
+            toggleTheme() {
+                const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                const newTheme = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('songfinder_theme', newTheme);
+                this.showNotification(`Switched to ${newTheme} theme`, 'success');
+            }
+
+            async fetchDbInfo() {
+                try {
+                    const baseUrl = CONFIG.API_URL.replace('/recognize', '');
+                    const response = await fetch(`${baseUrl}/stats`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.dbInfo.textContent = `${data.total_songs || 'Unknown'} songs in database`;
+                    } else {
+                        this.dbInfo.textContent = 'Database info unavailable';
+                    }
+                } catch (error) {
+                    this.dbInfo.textContent = 'Database info unavailable';
+                }
+            }
+
+            openSettings() {
+                this.apiUrlInput.value = CONFIG.API_URL;
+                this.settingsModal.classList.add('active');
+                this.fetchDbInfo();
+            }
+
+            closeSettings() {
+                this.settingsModal.classList.remove('active');
+            }
+
+            saveSettings() {
+                const newUrl = this.apiUrlInput.value.trim();
+                if (newUrl) {
+                    CONFIG.API_URL = newUrl;
+                    this.updateApiUrlDisplay();
+                    this.showNotification('Settings saved successfully!', 'success');
+                    this.closeSettings();
+                }
+            }
+
+            updateApiUrlDisplay() {
+                this.currentApiUrl.textContent = CONFIG.API_URL;
+            }
+
+            async toggleRecording() {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    await this.startRecording();
+                }
+            }
+
+            async startRecording() {
+                try {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Your browser does not support audio recording. Please use Chrome, Firefox, or Safari on HTTPS.');
+                    }
+
+                    const isSecure = window.location.protocol === 'https:' || 
+                                   window.location.hostname === 'localhost' || 
+                                   window.location.hostname === '127.0.0.1';
+                    
+                    if (!isSecure) {
+                        throw new Error('Microphone access requires HTTPS. Please access this page via https:// or localhost.');
+                    }
+
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 44100
+                        } 
+                    });
+                    
+                    // Setup audio visualizer
+                    this.setupVisualizer(stream);
+                    
+                    let mimeType = 'audio/webm';
+                    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                        mimeType = 'audio/webm;codecs=opus';
+                    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                        mimeType = 'audio/mp4';
+                    } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+                        mimeType = 'audio/ogg;codecs=opus';
+                    } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+                        mimeType = 'audio/wav';
+                    }
+
+                    this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+                    this.isRecording = true;
+                    this.recordingStartTime = Date.now();
+
+                    this.updateUI(true);
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                        }
+                    };
+
+                    this.mediaRecorder.start();
+                    this.scheduleRecognition();
+
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    
+                    let errorMessage = 'Could not access microphone. ';
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMessage += 'Please allow microphone access in your browser settings.';
+                    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                        errorMessage += 'No microphone found. Please connect a microphone.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMessage += 'Microphone is already in use by another application.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMessage += 'Could not satisfy audio constraints.';
+                    } else if (error.name === 'SecurityError') {
+                        errorMessage += 'Security error. Please use HTTPS or localhost.';
+                    } else {
+                        errorMessage += error.message || 'Unknown error occurred.';
+                    }
+                    
+                    this.showNotification(errorMessage, 'error');
+                }
+            }
+
+            setupVisualizer(stream) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.analyser = this.audioContext.createAnalyser();
+                const source = this.audioContext.createMediaStreamSource(stream);
+                source.connect(this.analyser);
+                
+                this.analyser.fftSize = 256;
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                this.visualizerContainer.classList.add('active');
+                this.visualizerCanvas.width = this.visualizerCanvas.offsetWidth;
+                this.visualizerCanvas.height = this.visualizerCanvas.offsetHeight;
+                
+                const draw = () => {
+                    if (!this.isRecording) return;
+                    
+                    this.visualizerAnimationId = requestAnimationFrame(draw);
+                    
+                    this.analyser.getByteFrequencyData(dataArray);
+                    
+                    this.visualizerCtx.fillStyle = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--bg-lighter');
+                    this.visualizerCtx.fillRect(0, 0, this.visualizerCanvas.width, this.visualizerCanvas.height);
+                    
+                    const barWidth = (this.visualizerCanvas.width / bufferLength) * 2.5;
+                    let x = 0;
+                    
+                    for (let i = 0; i < bufferLength; i++) {
+                        const barHeight = (dataArray[i] / 255) * this.visualizerCanvas.height;
+                        
+                        const gradient = this.visualizerCtx.createLinearGradient(0, this.visualizerCanvas.height - barHeight, 0, this.visualizerCanvas.height);
+                        gradient.addColorStop(0, '#FF006E');
+                        gradient.addColorStop(1, '#00F5FF');
+                        
+                        this.visualizerCtx.fillStyle = gradient;
+                        this.visualizerCtx.fillRect(x, this.visualizerCanvas.height - barHeight, barWidth, barHeight);
+                        
+                        x += barWidth + 1;
+                    }
+                };
+                
+                draw();
+            }
+
+            scheduleRecognition() {
+                this.recognitionInterval = setInterval(() => {
+                    this.performRecognition();
+                }, this.intervalSeconds * 1000);
+            }
+
+            async performRecognition() {
+                if (!this.isRecording || !this.mediaRecorder) return;
+
+                this.mediaRecorder.stop();
+
+                this.mediaRecorder.onstop = async () => {
+                    const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
+                    const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+                    this.audioChunks = [];
+
+                    await this.sendAudioToServer(audioBlob, mimeType);
+
+                    if (this.isRecording) {
+                        this.mediaRecorder.start();
+                    }
+                };
+            }
+
+            async sendAudioToServer(audioBlob, mimeType, retryCount = 0) {
+                try {
+                    let extension = '.webm';
+                    if (mimeType.includes('mp4')) extension = '.mp4';
+                    else if (mimeType.includes('ogg')) extension = '.ogg';
+                    else if (mimeType.includes('wav')) extension = '.wav';
+                    
+                    const filename = `recording${extension}`;
+                    
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, filename);
+                    formData.append('method', this.selectedMethod);
+
+                    const response = await fetch(CONFIG.API_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server error: ${response.status} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    this.addResult(result);
+
+                } catch (error) {
+                    console.error('Recognition error:', error);
+                    
+                    if (retryCount < CONFIG.RETRY_ATTEMPTS) {
+                        console.log(`Retrying... (${retryCount + 1}/${CONFIG.RETRY_ATTEMPTS})`);
+                        setTimeout(() => {
+                            this.sendAudioToServer(audioBlob, mimeType, retryCount + 1);
+                        }, 1000 * (retryCount + 1));
+                    } else {
+                        this.showNotification(`Recognition failed: ${error.message}`, 'error');
+                    }
+                }
+            }
+
+            stopRecording() {
+                this.isRecording = false;
+
+                if (this.recognitionInterval) {
+                    clearInterval(this.recognitionInterval);
+                    this.recognitionInterval = null;
+                }
+
+                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                    this.mediaRecorder.stop();
+                    this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                }
+
+                if (this.visualizerAnimationId) {
+                    cancelAnimationFrame(this.visualizerAnimationId);
+                }
+
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+
+                this.audioChunks = [];
+                this.visualizerContainer.classList.remove('active');
+                this.updateUI(false);
+            }
+
+            updateUI(isRecording) {
+                if (isRecording) {
+                    this.recordBtn.classList.add('recording');
+                    this.statusText.textContent = 'Listening...';
+                    this.statusText.classList.add('listening');
+                    this.mainCard.classList.add('active');
+                } else {
+                    this.recordBtn.classList.remove('recording');
+                    this.statusText.textContent = 'Tap to start listening';
+                    this.statusText.classList.remove('listening');
+                    this.mainCard.classList.remove('active');
+                }
+            }
+
+            addResult(result) {
+                const timestamp = new Date().toLocaleTimeString();
+                const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+                
+                this.results.unshift({
+                    ...result,
+                    timestamp,
+                    elapsed: elapsedSeconds,
+                    date: new Date().toISOString()
+                });
+
+                if (this.results.length > CONFIG.MAX_RESULTS) {
+                    this.results = this.results.slice(0, CONFIG.MAX_RESULTS);
+                }
+
+                this.saveResults();
+                this.renderResults();
+                this.updateStats();
+                
+                if (result.title) {
+                    this.showNotification(`Found: ${result.title}`, 'success');
+                }
+            }
+
+            saveResults() {
+                localStorage.setItem('songfinder_results', JSON.stringify(this.results));
+            }
+
+            loadResults() {
+                const saved = localStorage.getItem('songfinder_results');
+                if (saved) {
+                    this.results = JSON.parse(saved);
+                    this.renderResults();
+                }
+            }
+
+            updateStats() {
+                const total = this.results.length;
+                const matched = this.results.filter(r => r.title).length;
+                const avgConf = total > 0 
+                    ? (this.results.reduce((sum, r) => sum + r.confidence, 0) / total * 100).toFixed(0)
+                    : 0;
+                
+                this.statTotal.textContent = total;
+                this.statMatched.textContent = matched;
+                this.statAvgConf.textContent = `${avgConf}%`;
+            }
+
+            renderResults() {
+                if (this.results.length === 0) {
+                    this.resultsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🎵</div>
+                            <p>No recognitions yet. Start listening to identify songs!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.resultsContainer.innerHTML = this.results.map(result => {
+                    const confidence = result.confidence * 100;
+                    const confidenceClass = confidence >= 70 ? 'confidence-high' : 
+                                          confidence >= 40 ? 'confidence-medium' : 
+                                          'confidence-low';
+                    
+                    const title = result.title || 'No match found';
+                    const titleClass = result.title ? '' : 'no-match';
+
+                    return `
+                        <div class="result-item">
+                            <div class="result-header-row">
+                                <div class="result-title ${titleClass}">${title}</div>
+                                <div class="confidence-badge ${confidenceClass}">
+                                    ${confidence.toFixed(1)}%
+                                </div>
+                            </div>
+                            <div class="result-meta">
+                                <div class="meta-item">
+                                    <span>⏰</span>
+                                    <span>${result.timestamp}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>⏱️</span>
+                                    <span>+${result.elapsed}s</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>🔧</span>
+                                    <span>${result.method}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            exportResults() {
+                if (this.results.length === 0) {
+                    this.showNotification('No results to export', 'error');
+                    return;
+                }
+
+                const dataStr = JSON.stringify(this.results, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `songfinder-results-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                this.showNotification('Results exported successfully!', 'success');
+            }
+
+            clearResults() {
+                if (this.results.length === 0) return;
+                
+                if (confirm('Are you sure you want to clear all results?')) {
+                    this.results = [];
+                    this.saveResults();
+                    this.renderResults();
+                    this.updateStats();
+                    this.showNotification('Results cleared', 'success');
+                }
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.animation = 'slideInRight 0.3s reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize app when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new SongFinderApp();
+        });
+    </script>
+</body>
+</html>

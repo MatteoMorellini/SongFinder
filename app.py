@@ -16,7 +16,9 @@ import torch
 from wcwidth import wcswidth
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
 # -----------------------------
@@ -117,6 +119,16 @@ def log_detail(key: str, value: str):
 log_section("🎵 SongFinder API Server")
 
 app = FastAPI(title="SongFinder API", version="1.0")
+
+# Add CORS middleware to allow requests from the web interface
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 log.info(f"Using device: {device}")
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -218,10 +230,47 @@ def run_recognizer(method: str, mp3_path: str) -> RecognizerResult:
 # -----------------------------
 # API endpoints
 # -----------------------------
+
+# Serve the HTML interface at the root
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Serve the SongFinder web interface."""
+    html_file = Path(__file__).parent / "songfinder.html"
+    if html_file.exists():
+        return FileResponse(html_file)
+    else:
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head><title>SongFinder</title></head>
+        <body>
+            <h1>SongFinder API</h1>
+            <p>Place songfinder.html in the same directory as this script to use the web interface.</p>
+            <p>API Endpoint: POST /recognize</p>
+        </body>
+        </html>
+        """)
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     log.debug("Health check requested")
     return {"status": "ok"}
+
+
+@app.get("/stats")
+def get_stats() -> JSONResponse:
+    """Get database statistics."""
+    try:
+        stats = {
+            "total_songs": len(db_meta) if db_meta else 0,
+            "shazam_fingerprints": len(shazam_adapter.database) if hasattr(shazam_adapter, 'database') else 0,
+            "grafp_fingerprints": len(db_fp) if db_fp is not None else 0,
+            "status": "ready"
+        }
+        return JSONResponse(stats)
+    except Exception as e:
+        log.error(f"Error getting stats: {e}")
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
 @app.post("/recognize")
@@ -233,15 +282,38 @@ async def recognize(
     log_detail("Method", method)
     log_detail("Filename", file.filename or "unknown")
     
-    # Basic validation
+    # Basic validation - accept both webm and mp3
     filename = (file.filename or "").lower()
-    if not (filename.endswith(".mp3") or file.content_type in {"audio/mpeg", "audio/mp3"}):
-        log.warning("Invalid file format - expected MP3")
-        raise HTTPException(status_code=400, detail="Please upload an MP3 file.")
+    content_type = file.content_type or ""
+    
+    # Accept webm (from browser) and mp3
+    valid_extensions = (".mp3", ".webm", ".wav", ".m4a", ".ogg")
+    valid_types = ("audio/mpeg", "audio/mp3", "audio/webm", "audio/wav", "audio/x-m4a", "audio/ogg")
+    
+    if not (filename.endswith(valid_extensions) or content_type in valid_types):
+        log.warning(f"Invalid file format - got {filename} with type {content_type}")
+        raise HTTPException(
+            status_code=400, 
+            detail="Please upload an audio file (MP3, WebM, WAV, or M4A)."
+        )
 
-    # Save to a temp file (many audio libs want a path)
-    suffix = ".mp3"
+    # Determine file extension from filename or content type
+    if filename.endswith(".webm") or "webm" in content_type:
+        suffix = ".webm"
+    elif filename.endswith(".mp4") or filename.endswith(".m4a") or "mp4" in content_type:
+        suffix = ".mp4"
+    elif filename.endswith(".ogg") or "ogg" in content_type:
+        suffix = ".ogg"
+    elif filename.endswith(".wav") or "wav" in content_type:
+        suffix = ".wav"
+    else:
+        suffix = ".mp3"
+    
+    tmp_path = None
+    converted_path = None
+    
     try:
+        # Save uploaded file
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             tmp_path = tmp.name
             content = await file.read()
@@ -251,7 +323,32 @@ async def recognize(
             tmp.write(content)
             log_detail("File size", f"{len(content) / 1024:.1f} KB")
 
-        result = run_recognizer(method, tmp_path)
+        # Convert to WAV if needed (WebM/MP4/OGG need conversion)
+        if suffix in [".webm", ".mp4", ".ogg"]:
+            log.info(f"Converting {suffix} to WAV for processing...")
+            converted_path = tempfile.mktemp(suffix=".wav")
+            
+            # Use ffmpeg to convert to WAV
+            import subprocess
+            result = subprocess.run(
+                ["ffmpeg", "-i", tmp_path, "-ar", "44100", "-ac", "1", "-y", converted_path],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode != 0:
+                log.error(f"FFmpeg conversion failed: {result.stderr}")
+                raise HTTPException(
+                    status_code=500, 
+                    detail="Audio conversion failed. Make sure ffmpeg is installed."
+                )
+            
+            log_detail("Converted to", converted_path)
+            processing_path = converted_path
+        else:
+            processing_path = tmp_path
+
+        result = run_recognizer(method, processing_path)
 
         log.info("✨ Request completed successfully")
         return JSONResponse(
@@ -265,12 +362,17 @@ async def recognize(
         raise
     except Exception as e:
         log.error(f"Recognition failed: {e}")
-        raise
+        import traceback
+        log.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         # Cleanup
         try:
-            if "tmp_path" in locals() and tmp_path and os.path.exists(tmp_path):
+            if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)
                 log.debug("Temporary file cleaned up")
+            if converted_path and os.path.exists(converted_path):
+                os.remove(converted_path)
+                log.debug("Converted file cleaned up")
         except Exception:
             pass
