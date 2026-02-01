@@ -86,7 +86,6 @@ class ShazamRecognizer(BaseSongRecognizer):
         songs_path = str(path / "songs.db") if path else self.songs_db_path
         self.hash_table = load_db(db_path)
         self.song_table = load_db(songs_path)
-        print(self.song_table)
         
     def save(self, path: Optional[Path] = None) -> None:
         """Save databases to disk."""

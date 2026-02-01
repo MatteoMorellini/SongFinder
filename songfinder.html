@@ -297,54 +297,74 @@
             height: 100%;
         }
 
-        /* Interval selector */
-        .interval-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        /* Current Prediction Display */
+        .current-prediction {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+            transition: all 0.3s;
         }
 
-        .interval-label {
+        .current-prediction.has-prediction {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.2);
+        }
+
+        .prediction-label {
             font-size: 0.85rem;
             color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
+            margin-bottom: 15px;
             font-weight: 600;
         }
 
-        .interval-options {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+        .prediction-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .interval-btn {
-            padding: 10px;
-            background: var(--bg-lighter);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+        .prediction-title.no-match {
             color: var(--text-dim);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
         }
 
-        .interval-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
+        .prediction-confidence {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .interval-btn.active {
-            background: var(--secondary);
-            color: var(--bg);
-            border-color: var(--secondary);
+        .prediction-confidence.low {
+            opacity: 0.5;
+        }
+
+        /* Interval selector - REMOVED */
+        
+        /* Export Actions */
+        .export-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 30px;
         }
 
         /* Statistics Dashboard */
         .stats-dashboard {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             margin: 20px 0;
         }
@@ -788,48 +808,29 @@
                 <canvas id="visualizer"></canvas>
             </div>
 
-            <!-- Interval Selection -->
-            <div class="interval-section">
-                <div class="interval-label">Recognition Interval</div>
-                <div class="interval-options">
-                    <button class="interval-btn" data-interval="3">3s</button>
-                    <button class="interval-btn active" data-interval="5">5s</button>
-                    <button class="interval-btn" data-interval="10">10s</button>
-                    <button class="interval-btn" data-interval="15">15s</button>
-                </div>
+            <!-- Current Prediction Display -->
+            <div class="current-prediction" id="currentPrediction">
+                <div class="prediction-label">Current Detection</div>
+                <div class="prediction-title" id="predictionTitle">Tap to start listening</div>
+                <div class="prediction-confidence" id="predictionConfidence">—</div>
             </div>
 
             <!-- Statistics Dashboard -->
             <div class="stats-dashboard">
                 <div class="stat-card">
                     <div class="stat-value" id="statTotal">0</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="statMatched">0</div>
-                    <div class="stat-label">Matched</div>
+                    <div class="stat-label">Total Queries</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statAvgConf">0%</div>
-                    <div class="stat-label">Avg Conf.</div>
+                    <div class="stat-label">Avg Confidence</div>
                 </div>
             </div>
 
-            <!-- Results -->
-            <div class="results-section">
-                <div class="results-header">
-                    <div class="results-title">Recognition History</div>
-                    <div class="results-actions">
-                        <button class="action-btn" id="exportBtn">📥 Export</button>
-                        <button class="action-btn" id="clearBtn">🗑️ Clear</button>
-                    </div>
-                </div>
-                <div id="resultsContainer">
-                    <div class="empty-state">
-                        <div class="empty-icon">🎵</div>
-                        <p>No recognitions yet. Start listening to identify songs!</p>
-                    </div>
-                </div>
+            <!-- Export Actions -->
+            <div class="export-actions">
+                <button class="action-btn" id="exportBtn">📥 Export History</button>
+                <button class="action-btn" id="clearBtn">🗑️ Clear History</button>
             </div>
         </div>
 
@@ -860,14 +861,18 @@
                 this.isRecording = false;
                 this.mediaRecorder = null;
                 this.audioChunks = [];
-                this.recognitionInterval = null;
+                this.allAudioChunks = [];  // Cumulative chunks for progressive recording
                 this.selectedMethod = 'shazam';
-                this.intervalSeconds = 5;
                 this.results = [];
                 this.recordingStartTime = null;
                 this.audioContext = null;
                 this.analyser = null;
                 this.visualizerAnimationId = null;
+                
+                // Recognition timing: send at 3s, 5s, 10s, 15s, then stop
+                this.recognitionTimings = [3, 5, 10, 15];
+                this.currentTimingIndex = 0;
+                this.recognitionTimeouts = [];
 
                 this.initElements();
                 this.attachEventListeners();
@@ -882,10 +887,13 @@
             initElements() {
                 this.recordBtn = document.getElementById('recordBtn');
                 this.statusText = document.getElementById('statusText');
-                this.resultsContainer = document.getElementById('resultsContainer');
                 this.mainCard = document.getElementById('mainCard');
                 this.methodBtns = document.querySelectorAll('.method-btn');
-                this.intervalBtns = document.querySelectorAll('.interval-btn');
+                
+                // Current prediction display
+                this.currentPrediction = document.getElementById('currentPrediction');
+                this.predictionTitle = document.getElementById('predictionTitle');
+                this.predictionConfidence = document.getElementById('predictionConfidence');
                 
                 // Toolbar
                 this.themeToggle = document.getElementById('themeToggle');
@@ -905,7 +913,6 @@
                 
                 // Stats
                 this.statTotal = document.getElementById('statTotal');
-                this.statMatched = document.getElementById('statMatched');
                 this.statAvgConf = document.getElementById('statAvgConf');
                 
                 // Visualizer
@@ -922,14 +929,6 @@
                         this.methodBtns.forEach(b => b.classList.remove('active'));
                         e.target.classList.add('active');
                         this.selectedMethod = e.target.dataset.method;
-                    });
-                });
-
-                this.intervalBtns.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        this.intervalBtns.forEach(b => b.classList.remove('active'));
-                        e.target.classList.add('active');
-                        this.intervalSeconds = parseInt(e.target.dataset.interval);
                     });
                 });
 
@@ -1058,10 +1057,11 @@
 
                     const stream = await navigator.mediaDevices.getUserMedia({ 
                         audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            sampleRate: 44100
-                        } 
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false,
+                            sampleRate: 44100,        // Optional: match your server's expected rate
+                        }
                     });
                     
                     // Setup audio visualizer
@@ -1081,12 +1081,17 @@
                     this.mediaRecorder = new MediaRecorder(stream, { mimeType });
                     this.isRecording = true;
                     this.recordingStartTime = Date.now();
+                    
+                    // Clear chunk arrays
+                    this.audioChunks = [];
+                    this.allAudioChunks = [];
 
                     this.updateUI(true);
 
                     this.mediaRecorder.ondataavailable = (event) => {
                         if (event.data.size > 0) {
                             this.audioChunks.push(event.data);
+                            this.allAudioChunks.push(event.data);  // Also accumulate for cumulative recordings
                         }
                     };
 
@@ -1127,8 +1132,15 @@
                 const dataArray = new Uint8Array(bufferLength);
                 
                 this.visualizerContainer.classList.add('active');
-                this.visualizerCanvas.width = this.visualizerCanvas.offsetWidth;
-                this.visualizerCanvas.height = this.visualizerCanvas.offsetHeight;
+                
+                // Wait for container to be visible before setting canvas size
+                requestAnimationFrame(() => {
+                    const width = this.visualizerCanvas.offsetWidth || 500;
+                    const height = this.visualizerCanvas.offsetHeight || 60;
+                    
+                    this.visualizerCanvas.width = width;
+                    this.visualizerCanvas.height = height;
+                });
                 
                 const draw = () => {
                     if (!this.isRecording) return;
@@ -1137,8 +1149,9 @@
                     
                     this.analyser.getByteFrequencyData(dataArray);
                     
+                    // Use dark background color
                     this.visualizerCtx.fillStyle = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--bg-lighter');
+                        .getPropertyValue('--bg-lighter').trim() || '#151923';
                     this.visualizerCtx.fillRect(0, 0, this.visualizerCanvas.width, this.visualizerCanvas.height);
                     
                     const barWidth = (this.visualizerCanvas.width / bufferLength) * 2.5;
@@ -1158,34 +1171,57 @@
                     }
                 };
                 
-                draw();
+                // Start drawing after a short delay to ensure canvas is sized
+                setTimeout(() => draw(), 100);
             }
 
             scheduleRecognition() {
-                this.recognitionInterval = setInterval(() => {
-                    this.performRecognition();
-                }, this.intervalSeconds * 1000);
+                // Schedule recognition at 3s, 5s, 10s, and 15s
+                this.currentTimingIndex = 0;
+                this.recognitionTimeouts = [];
+                
+                this.recognitionTimings.forEach((seconds, index) => {
+                    const timeout = setTimeout(() => {
+                        this.performRecognition(index);
+                        
+                        // Stop after the last timing (15s)
+                        if (index === this.recognitionTimings.length - 1) {
+                            setTimeout(() => {
+                                if (this.isRecording) {
+                                    this.stopRecording();
+                                }
+                            }, 100);
+                        }
+                    }, seconds * 1000);
+                    
+                    this.recognitionTimeouts.push(timeout);
+                });
             }
 
-            async performRecognition() {
+            async performRecognition(timingIndex) {
                 if (!this.isRecording || !this.mediaRecorder) return;
 
-                this.mediaRecorder.stop();
+                const currentTiming = this.recognitionTimings[timingIndex];
+                console.log(`Performing recognition at ${currentTiming}s`);
 
-                this.mediaRecorder.onstop = async () => {
-                    const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
-                    const audioBlob = new Blob(this.audioChunks, { type: mimeType });
-                    this.audioChunks = [];
-
-                    await this.sendAudioToServer(audioBlob, mimeType);
-
-                    if (this.isRecording) {
-                        this.mediaRecorder.start();
-                    }
-                };
+                // Request data from the MediaRecorder without stopping it
+                // This will trigger ondataavailable with all accumulated chunks
+                this.mediaRecorder.requestData();
+                
+                // Wait a bit for the data to be collected
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Create blob from all accumulated chunks (cumulative recording)
+                const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
+                const audioBlob = new Blob(this.allAudioChunks, { type: mimeType });
+                
+                console.log(`Sending ${currentTiming}s audio, blob size: ${audioBlob.size} bytes`);
+                
+                // Send to server (don't clear chunks - we want cumulative)
+                await this.sendAudioToServer(audioBlob, mimeType, currentTiming);
             }
 
-            async sendAudioToServer(audioBlob, mimeType, retryCount = 0) {
+            async sendAudioToServer(audioBlob, mimeType, timingSeconds, retryCount = 0) {
                 try {
                     let extension = '.webm';
                     if (mimeType.includes('mp4')) extension = '.mp4';
@@ -1209,7 +1245,12 @@
                     }
 
                     const result = await response.json();
-                    this.addResult(result);
+                    
+                    // Save to history but don't display list
+                    this.saveResultToHistory(result, timingSeconds);
+                    
+                    // Update the current prediction display
+                    this.updatePredictionDisplay(result);
 
                 } catch (error) {
                     console.error('Recognition error:', error);
@@ -1217,8 +1258,9 @@
                     if (retryCount < CONFIG.RETRY_ATTEMPTS) {
                         console.log(`Retrying... (${retryCount + 1}/${CONFIG.RETRY_ATTEMPTS})`);
                         setTimeout(() => {
-                            this.sendAudioToServer(audioBlob, mimeType, retryCount + 1);
+                            this.sendAudioToServer(audioBlob, mimeType, timingSeconds, retryCount + 1);
                         }, 1000 * (retryCount + 1));
+
                     } else {
                         this.showNotification(`Recognition failed: ${error.message}`, 'error');
                     }
@@ -1228,10 +1270,9 @@
             stopRecording() {
                 this.isRecording = false;
 
-                if (this.recognitionInterval) {
-                    clearInterval(this.recognitionInterval);
-                    this.recognitionInterval = null;
-                }
+                // Clear all scheduled recognition timeouts
+                this.recognitionTimeouts.forEach(timeout => clearTimeout(timeout));
+                this.recognitionTimeouts = [];
 
                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                     this.mediaRecorder.stop();
@@ -1247,6 +1288,7 @@
                 }
 
                 this.audioChunks = [];
+                this.allAudioChunks = [];
                 this.visualizerContainer.classList.remove('active');
                 this.updateUI(false);
             }
@@ -1265,14 +1307,13 @@
                 }
             }
 
-            addResult(result) {
+            saveResultToHistory(result, timingSeconds) {
                 const timestamp = new Date().toLocaleTimeString();
-                const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTime) / 1000);
                 
                 this.results.unshift({
                     ...result,
                     timestamp,
-                    elapsed: elapsedSeconds,
+                    timingSeconds,
                     date: new Date().toISOString()
                 });
 
@@ -1281,11 +1322,53 @@
                 }
 
                 this.saveResults();
-                this.renderResults();
                 this.updateStats();
+            }
+
+            updateStats() {
+                const total = this.results.length;
+                this.statTotal.textContent = String(total);
+
+                if (total === 0) {
+                    this.statAvgConf.textContent = '0%';
+                    return;
+                }
+
+                let sum = 0;
+                let count = 0;
+
+                for (const r of this.results) {
+                    const c = Number(r.confidence);
+                    if (!Number.isFinite(c)) continue;
+                    sum += c;
+                    count++;
+                }
+
+                const avgPct = count ? (sum / count) * 100 : 0;
+                this.statAvgConf.textContent = `${avgPct.toFixed(1)}%`;
+            }
+
+
+            updatePredictionDisplay(result) {
+                const confidence = result.confidence * 100;
                 
                 if (result.title) {
-                    this.showNotification(`Found: ${result.title}`, 'success');
+                    this.predictionTitle.textContent = result.title;
+                    this.predictionTitle.classList.remove('no-match');
+                    this.predictionConfidence.textContent = `${confidence.toFixed(1)}%`;
+                    this.currentPrediction.classList.add('has-prediction');
+                    
+                    if (confidence < 40) {
+                        this.predictionConfidence.classList.add('low');
+                    } else {
+                        this.predictionConfidence.classList.remove('low');
+                    }
+                } else {
+                    this.predictionTitle.textContent = 'No match found';
+                    this.predictionTitle.classList.add('no-match');
+                    this.predictionConfidence.textContent = `${confidence.toFixed(1)}%`;
+                    this.predictionConfidence.classList.add('low');
+                    this.currentPrediction.classList.remove('has-prediction');
                 }
             }
 
@@ -1297,67 +1380,8 @@
                 const saved = localStorage.getItem('songfinder_results');
                 if (saved) {
                     this.results = JSON.parse(saved);
-                    this.renderResults();
+                    // Don't render results - only used for export
                 }
-            }
-
-            updateStats() {
-                const total = this.results.length;
-                const matched = this.results.filter(r => r.title).length;
-                const avgConf = total > 0 
-                    ? (this.results.reduce((sum, r) => sum + r.confidence, 0) / total * 100).toFixed(0)
-                    : 0;
-                
-                this.statTotal.textContent = total;
-                this.statMatched.textContent = matched;
-                this.statAvgConf.textContent = `${avgConf}%`;
-            }
-
-            renderResults() {
-                if (this.results.length === 0) {
-                    this.resultsContainer.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">🎵</div>
-                            <p>No recognitions yet. Start listening to identify songs!</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                this.resultsContainer.innerHTML = this.results.map(result => {
-                    const confidence = result.confidence * 100;
-                    const confidenceClass = confidence >= 70 ? 'confidence-high' : 
-                                          confidence >= 40 ? 'confidence-medium' : 
-                                          'confidence-low';
-                    
-                    const title = result.title || 'No match found';
-                    const titleClass = result.title ? '' : 'no-match';
-
-                    return `
-                        <div class="result-item">
-                            <div class="result-header-row">
-                                <div class="result-title ${titleClass}">${title}</div>
-                                <div class="confidence-badge ${confidenceClass}">
-                                    ${confidence.toFixed(1)}%
-                                </div>
-                            </div>
-                            <div class="result-meta">
-                                <div class="meta-item">
-                                    <span>⏰</span>
-                                    <span>${result.timestamp}</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span>⏱️</span>
-                                    <span>+${result.elapsed}s</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span>🔧</span>
-                                    <span>${result.method}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
             }
 
             exportResults() {
@@ -1381,12 +1405,18 @@
             clearResults() {
                 if (this.results.length === 0) return;
                 
-                if (confirm('Are you sure you want to clear all results?')) {
+                if (confirm('Are you sure you want to clear all history?')) {
                     this.results = [];
                     this.saveResults();
-                    this.renderResults();
                     this.updateStats();
-                    this.showNotification('Results cleared', 'success');
+                    
+                    // Reset prediction display
+                    this.predictionTitle.textContent = 'Tap to start listening';
+                    this.predictionTitle.classList.remove('no-match');
+                    this.predictionConfidence.textContent = '—';
+                    this.currentPrediction.classList.remove('has-prediction');
+                    
+                    this.showNotification('History cleared', 'success');
                 }
             }
 

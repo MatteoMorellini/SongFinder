@@ -261,12 +261,31 @@ def health() -> Dict[str, str]:
 def get_stats() -> JSONResponse:
     """Get database statistics."""
     try:
+        # Count total songs
+        total_songs = len(db_meta) if db_meta is not None and len(db_meta) > 0 else 0
+        
+        # Count Shazam fingerprints
+        shazam_fps = 0
+        if hasattr(shazam_adapter, 'hash_table'):
+            shazam_fps = len(shazam_adapter.hash_table)
+        elif hasattr(shazam_adapter, 'database'):
+            shazam_fps = len(shazam_adapter.database)
+        
+        # Count GraFP fingerprints (handle numpy array properly)
+        grafp_fps = 0
+        try:
+            if db_fp is not None and hasattr(db_fp, '__len__'):
+                grafp_fps = len(db_fp)
+        except (TypeError, ValueError):
+            grafp_fps = 0
+        
         stats = {
-            "total_songs": len(db_meta) if db_meta else 0,
-            "shazam_fingerprints": len(shazam_adapter.database) if hasattr(shazam_adapter, 'database') else 0,
-            "grafp_fingerprints": len(db_fp) if db_fp is not None else 0,
+            "total_songs": total_songs,
+            "shazam_fingerprints": shazam_fps,
+            "grafp_fingerprints": grafp_fps,
             "status": "ready"
         }
+        print(stats)
         return JSONResponse(stats)
     except Exception as e:
         log.error(f"Error getting stats: {e}")
@@ -368,10 +387,10 @@ async def recognize(
     finally:
         # Cleanup
         try:
-            if tmp_path and os.path.exists(tmp_path):
+            if tmp_path and os.path.exists(tmp_path) and False:
                 os.remove(tmp_path)
                 log.debug("Temporary file cleaned up")
-            if converted_path and os.path.exists(converted_path):
+            if converted_path and os.path.exists(converted_path) and False:
                 os.remove(converted_path)
                 log.debug("Converted file cleaned up")
         except Exception:
