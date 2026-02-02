@@ -1,22 +1,8 @@
 #!/usr/bin/env python3
 """
-Shazam Hyperparameter Benchmark Script.
+Shazam Hyperparameter Benchmark Script with Detailed Misclassification Tracking.
 
-This script tests the Shazam approach with different hyperparameter configurations
-using the same test conditions as benchmark.py.
-
-Hyperparameters tested:
-    - FUZ_FACTOR: absorb small variations in frequency/time
-    - TARGET_SR: target sample rate
-    - N_FFT: FFT window size
-    - HOP_RATIO: hop_length = n_fft / hop_ratio (e.g., 4 means 75% overlap)
-    - FAN_OUT: number of target peaks paired with each anchor
-
-Usage:
-    python scripts/benchmark_shazam_hyperparams.py --db_dir ./fingerprints/ \
-                                                    --test_dir ~/datasets/fma_small \
-                                                    --aug_dir ~/datasets/aug \
-                                                    --n_test 100
+This enhanced version tracks which songs were misclassified and what they were predicted as.
 """
 
 import os
@@ -46,6 +32,16 @@ from benchmark import (
     load_noise_files,
     load_ir_files,
 )
+
+
+@dataclass
+class MisclassificationRecord:
+    """Record of a single misclassification."""
+    test_file: str
+    expected: str
+    predicted: str
+    score: float
+    query_time_ms: float
 
 
 @dataclass
@@ -99,14 +95,12 @@ class HyperparamBenchmarkResults:
     fingerprints_per_song: float = 0.0  # average fingerprints per song
     hash_table_size_mb: float = 0.0  # approximate memory size
     conditions: Dict[str, dict] = field(default_factory=dict)
+    misclassifications: Dict[str, List[dict]] = field(default_factory=dict)  # NEW: track errors
+    avg_confidence: Dict[str, float] = field(default_factory=dict)  # NEW: average confidence per condition
 
 
 # Hyperparameter grid to search
-# hop_ratio: 4 = 75% overlap, 6 ≈ 83% overlap, 8 = 87.5% overlap
 DEFAULT_HYPERPARAM_GRID = {
-    # "target_sr": [8000, 11025, 16000],
-    # "n_fft": [1024, 2048, 4096],
-    # "fan_out": [3, 5, 10],
     "target_sr": [11025],
     "n_fft": [2048],
     "fan_out": [5],
@@ -138,44 +132,6 @@ def reload_shazam_modules() -> None:
             importlib.reload(sys.modules[module_name])
 
 
-def index_songs_with_config(
-    song_files: List[Path],
-    config: HyperparamConfig,
-    temp_db_dir: Path
-) -> Tuple[float, int, int]:
-    """
-    Index songs with a specific hyperparameter configuration.
-    
-    Returns:
-        Tuple of (indexing_time_ms, n_songs_indexed, n_fingerprints)
-    """
-    # Set environment variables
-    set_shazam_env_vars(config)
-    reload_shazam_modules()
-    
-    # Import fresh recognizer
-    from approaches.shazam import ShazamRecognizer
-    
-    recognizer = ShazamRecognizer()
-    
-    start = time.time()
-    for song_file in tqdm(song_files, desc=f"Indexing with {config}", leave=False):
-        try:
-            recognizer.index_song(song_file)
-        except Exception as e:
-            print(f"    Error indexing {song_file.name}: {e}")
-    indexing_time = (time.time() - start) * 1000
-    
-    # Count total fingerprints
-    n_fingerprints = sum(len(v) for v in recognizer.hash_table.values())
-    
-    # Save to temp directory
-    temp_db_dir.mkdir(parents=True, exist_ok=True)
-    recognizer.save(temp_db_dir)
-    
-    return indexing_time, recognizer.num_indexed_songs, n_fingerprints
-
-
 def benchmark_shazam_with_config(
     config: HyperparamConfig,
     db_dir: Path,
@@ -185,17 +141,9 @@ def benchmark_shazam_with_config(
     conditions: List[TestCondition],
     indexing_time_ms: float = 0.0,
     n_fingerprints: int = 0,
-    preloaded_recognizer=None  # Reuse already-loaded recognizer
+    preloaded_recognizer=None
 ) -> HyperparamBenchmarkResults:
-    """Benchmark Shazam with a specific hyperparameter configuration.
-    
-    Note: We don't use benchmark_shazam from benchmark.py here to avoid
-    loading the recognizer twice (which would double RAM usage).
-    
-    Args:
-        preloaded_recognizer: If provided, reuse this recognizer instead of loading.
-                              Useful when skip_indexing=True to avoid reloading.
-    """
+    """Benchmark Shazam with a specific hyperparameter configuration."""
     # Set environment variables and reload modules
     set_shazam_env_vars(config)
     reload_shazam_modules()
@@ -205,7 +153,7 @@ def benchmark_shazam_with_config(
     # Use preloaded recognizer or load fresh
     if preloaded_recognizer is not None:
         recognizer = preloaded_recognizer
-        db_load_time = 0.0  # Already loaded
+        db_load_time = 0.0
         print("  Using preloaded recognizer")
     else:
         from approaches.shazam import ShazamRecognizer
@@ -226,13 +174,17 @@ def benchmark_shazam_with_config(
     print(f"  Loaded {n_songs} songs in {db_load_time:.1f}ms")
     print(f"  Fingerprints: {n_fingerprints:,} ({fingerprints_per_song:.0f}/song), ~{hash_table_size_mb:.1f}MB")
     
-    # Run benchmarks for each condition (reusing the loaded recognizer)
+    # Run benchmarks for each condition
     results_conditions = {}
+    all_misclassifications = {}  # NEW: store misclassifications per condition
+    all_confidences = {}  # NEW: store average confidence per condition
     
     for condition in conditions:
         correct = 0
         total = 0
         query_times = []
+        confidence_scores = []  # NEW: track all confidence scores
+        misclassifications = []  # NEW: track errors for this condition
         
         for test_file in test_files:
             expected = test_file.stem
@@ -247,24 +199,51 @@ def benchmark_shazam_with_config(
                 query_time = (time.time() - start) * 1000
                 query_times.append(query_time)
                 
+                # NEW: Track confidence score
+                if score is not None:
+                    confidence_scores.append(float(score))
+                
                 if song == expected:
                     correct += 1
+                else:
+                    # NEW: Record misclassification
+                    misclassifications.append({
+                        "test_file": test_file.name,
+                        "expected": expected,
+                        "predicted": song if song else "NO_MATCH",
+                        "score": float(score) if score is not None else 0.0,
+                        "query_time_ms": query_time
+                    })
                 total += 1
                 
             except Exception as e:
+                # NEW: Record errors as misclassifications
+                misclassifications.append({
+                    "test_file": test_file.name,
+                    "expected": expected,
+                    "predicted": "ERROR",
+                    "score": 0.0,
+                    "query_time_ms": 0.0,
+                    "error": str(e)
+                })
                 total += 1
         
         accuracy = correct / total * 100 if total > 0 else 0
         avg_time = np.mean(query_times) if query_times else 0
+        avg_confidence = np.mean(confidence_scores) if confidence_scores else 0.0  # NEW
         
         results_conditions[condition.name] = {
             "accuracy": accuracy,
             "avg_query_time_ms": avg_time,
+            "avg_confidence": avg_confidence,  # NEW
             "correct": correct,
             "total": total
         }
         
-        print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), {avg_time:.1f}ms/query")
+        all_misclassifications[condition.name] = misclassifications  # NEW: store errors
+        all_confidences[condition.name] = avg_confidence  # NEW: store avg confidence
+        
+        print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), {avg_time:.1f}ms/query, {len(misclassifications)} errors, avg_conf={avg_confidence:.3f}")
     
     # Return results
     return HyperparamBenchmarkResults(
@@ -277,7 +256,9 @@ def benchmark_shazam_with_config(
         n_fingerprints=n_fingerprints,
         fingerprints_per_song=fingerprints_per_song,
         hash_table_size_mb=hash_table_size_mb,
-        conditions=results_conditions
+        conditions=results_conditions,
+        misclassifications=all_misclassifications,  # NEW: include errors
+        avg_confidence=all_confidences  # NEW: include avg confidence
     )
 
 
@@ -285,17 +266,7 @@ def generate_hyperparam_configs(
     grid: Dict[str, List],
     vary_one_at_a_time: bool = True
 ) -> List[HyperparamConfig]:
-    """
-    Generate hyperparameter configurations to test.
-    
-    Args:
-        grid: Dictionary mapping parameter names to lists of values
-        vary_one_at_a_time: If True, only vary one parameter at a time from defaults.
-                           If False, generate full grid search.
-    
-    Returns:
-        List of HyperparamConfig objects
-    """
+    """Generate hyperparameter configurations to test."""
     # Default configuration
     default = HyperparamConfig()
     configs = [default]  # Always include default
@@ -334,13 +305,13 @@ def generate_hyperparam_configs(
 
 def print_summary(all_results: List[HyperparamBenchmarkResults]):
     """Print summary comparison of all configurations."""
-    print("\n" + "=" * 120)
+    print("\n" + "=" * 130)
     print("HYPERPARAMETER BENCHMARK SUMMARY")
-    print("=" * 120)
+    print("=" * 130)
     
     # Accuracy & Query Time Table
-    print(f"\n{'Configuration':<45} {'clean_10s':>9} {'clean_5s':>9} {'snr_5db':>9} {'Avg Query':>11} {'FP/song':>10} {'Size MB':>9}")
-    print("-" * 120)
+    print(f"\n{'Configuration':<45} {'clean_10s':>9} {'clean_5s':>9} {'snr_5db':>9} {'Avg Query':>11} {'Avg Conf':>9} {'FP/song':>10} {'Size MB':>9}")
+    print("-" * 130)
     
     for result in all_results:
         config_str = str(HyperparamConfig.from_dict(result.config))[:43]
@@ -353,9 +324,14 @@ def print_summary(all_results: List[HyperparamBenchmarkResults]):
             for c in result.conditions.values()
         ])
         
-        print(f"{config_str:<45} {clean_10s:>8.1f}% {clean_5s:>8.1f}% {snr_5db:>8.1f}% {avg_query_time:>9.1f}ms {result.fingerprints_per_song:>10.0f} {result.hash_table_size_mb:>8.1f}")
+        avg_confidence = np.mean([
+            result.avg_confidence.get(cond_name, 0.0)
+            for cond_name in result.avg_confidence.keys()
+        ]) if result.avg_confidence else 0.0
+        
+        print(f"{config_str:<45} {clean_10s:>8.1f}% {clean_5s:>8.1f}% {snr_5db:>8.1f}% {avg_query_time:>9.1f}ms {avg_confidence:>9.3f} {result.fingerprints_per_song:>10.0f} {result.hash_table_size_mb:>8.1f}")
     
-    print("=" * 120)
+    print("=" * 130)
     
     # Find best configuration for each metric
     print("\nBest configurations:")
@@ -374,21 +350,39 @@ def print_summary(all_results: List[HyperparamBenchmarkResults]):
         if best_result:
             config_str = str(HyperparamConfig.from_dict(best_result.config))
             print(f"    {cond_name.name:<20}: {best_acc:>6.1f}% - {config_str}")
+
+
+def print_misclassifications(all_results: List[HyperparamBenchmarkResults], max_show: int = 20):
+    """Print detailed misclassification information."""
+    print("\n" + "=" * 120)
+    print("MISCLASSIFICATION DETAILS")
+    print("=" * 120)
     
-    # Best by query time
-    print("\n  By query time (fastest):")
-    best_result = min(all_results, key=lambda r: np.mean([c.get("avg_query_time_ms", float('inf')) for c in r.conditions.values()]))
-    avg_time = np.mean([c.get("avg_query_time_ms", 0) for c in best_result.conditions.values()])
-    print(f"    {avg_time:.1f}ms - {HyperparamConfig.from_dict(best_result.config)}")
-    
-    # Best by storage efficiency (accuracy / fingerprints)
-    print("\n  By efficiency (accuracy per 1000 fingerprints):")
-    def efficiency(r):
-        acc = r.conditions.get("clean_10s", {}).get("accuracy", 0)
-        return acc / (r.fingerprints_per_song / 1000) if r.fingerprints_per_song > 0 else 0
-    best_result = max(all_results, key=efficiency)
-    eff = efficiency(best_result)
-    print(f"    {eff:.2f} acc/%K - {HyperparamConfig.from_dict(best_result.config)}")
+    for result in all_results:
+        config_str = str(HyperparamConfig.from_dict(result.config))
+        print(f"\nConfiguration: {config_str}")
+        print("-" * 120)
+        
+        for condition_name, misclass_list in result.misclassifications.items():
+            if not misclass_list:
+                print(f"\n  {condition_name}: No misclassifications! ✓")
+                continue
+            
+            print(f"\n  {condition_name}: {len(misclass_list)} misclassifications")
+            print(f"  {'Expected':<30} {'Predicted':<30} {'Score':>8} {'Time (ms)':>10}")
+            print("  " + "-" * 88)
+            
+            # Show up to max_show misclassifications
+            for i, misclass in enumerate(misclass_list[:max_show]):
+                expected = misclass["expected"][:28]
+                predicted = misclass["predicted"][:28]
+                score = misclass["score"]
+                query_time = misclass["query_time_ms"]
+                
+                print(f"  {expected:<30} {predicted:<30} {score:>8.2f} {query_time:>10.1f}")
+            
+            if len(misclass_list) > max_show:
+                print(f"  ... and {len(misclass_list) - max_show} more")
 
 
 def main():
@@ -401,12 +395,14 @@ def main():
                         help='Directory with noise/IR augmentation files')
     parser.add_argument('--n_test', type=int, default=100,
                         help='Number of test queries')
-    parser.add_argument('--output', type=str, default='benchmark_shazam_hyperparams.json')
+    parser.add_argument('--output', type=str, default='benchmark_shazam_hyperparams_detailed.json')
     parser.add_argument('--seed', type=int, default=12)
     parser.add_argument('--full_grid', action='store_true',
                         help='Run full grid search instead of varying one param at a time')
     parser.add_argument('--conditions', type=str, nargs='+', default=None,
                         help='Specific conditions to test (default: all)')
+    parser.add_argument('--show_errors', type=int, default=20,
+                        help='Number of misclassifications to show per condition (default: 20)')
     
     # Individual hyperparameter overrides
     parser.add_argument('--fuz_factors', type=int, nargs='+', default=None,
@@ -473,7 +469,7 @@ def main():
     
     all_results = []
     
-    # Always load fingerprints once at the beginning (they're the same for all configs)
+    # Load fingerprints once at the beginning
     db_dir = Path(args.db_dir).expanduser()
     shazam_db_path = db_dir / "shazam"
     if not shazam_db_path.exists():
@@ -515,9 +511,10 @@ def main():
             import traceback
             traceback.print_exc()
     
-    # Print summary
+    # Print summaries
     if all_results:
         print_summary(all_results)
+        print_misclassifications(all_results, max_show=args.show_errors)
     
     # Save results
     output_data = {
@@ -529,7 +526,8 @@ def main():
     
     with open(args.output, 'w') as f:
         json.dump(output_data, f, indent=2)
-    print(f"\nResults saved to {args.output}")
+    print(f"\n\nResults saved to {args.output}")
+    print(f"You can examine the misclassifications in detail in the JSON file.")
 
 
 if __name__ == '__main__':

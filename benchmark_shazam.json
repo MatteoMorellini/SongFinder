@@ -1,0 +1,246 @@
+{
+  "configs_tested": 1,
+  "test_conditions": [
+    "clean_10s",
+    "clean_5s",
+    "clean_3s",
+    "snr_10db",
+    "snr_5db",
+    "snr_0db",
+    "ir_10s",
+    "ir_snr_5db"
+  ],
+  "n_test_files": 100,
+  "results": [
+    {
+      "approach": "Shazam",
+      "config": {
+        "fuz_factor": 2,
+        "target_sr": 11025,
+        "n_fft": 2048,
+        "hop_ratio": 6,
+        "hop_length": 341,
+        "fan_out": 5
+      },
+      "n_db_songs": 7995,
+      "n_queries": 100,
+      "db_load_time_ms": 0.0,
+      "indexing_time_ms": 0.0,
+      "n_fingerprints": 215038667,
+      "fingerprints_per_song": 26896.643777360852,
+      "hash_table_size_mb": 4921.8444900512695,
+      "conditions": {
+        "clean_10s": {
+          "accuracy": 99.0,
+          "avg_query_time_ms": 436.48775339126587,
+          "avg_confidence": 0.48488267872733287,
+          "correct": 99,
+          "total": 100
+        },
+        "clean_5s": {
+          "accuracy": 99.0,
+          "avg_query_time_ms": 288.00312519073486,
+          "avg_confidence": 0.3419508452829872,
+          "correct": 99,
+          "total": 100
+        },
+        "clean_3s": {
+          "accuracy": 99.0,
+          "avg_query_time_ms": 209.6578335762024,
+          "avg_confidence": 0.23352385993605063,
+          "correct": 99,
+          "total": 100
+        },
+        "snr_10db": {
+          "accuracy": 97.0,
+          "avg_query_time_ms": 456.9014620780945,
+          "avg_confidence": 0.42262474909912146,
+          "correct": 97,
+          "total": 100
+        },
+        "snr_5db": {
+          "accuracy": 97.0,
+          "avg_query_time_ms": 418.10633420944214,
+          "avg_confidence": 0.38819299979644534,
+          "correct": 97,
+          "total": 100
+        },
+        "snr_0db": {
+          "accuracy": 95.0,
+          "avg_query_time_ms": 409.78047370910645,
+          "avg_confidence": 0.332578234761961,
+          "correct": 95,
+          "total": 100
+        },
+        "ir_10s": {
+          "accuracy": 99.0,
+          "avg_query_time_ms": 432.01401233673096,
+          "avg_confidence": 0.48488267872733287,
+          "correct": 99,
+          "total": 100
+        },
+        "ir_snr_5db": {
+          "accuracy": 97.0,
+          "avg_query_time_ms": 414.990131855011,
+          "avg_confidence": 0.38819299979644534,
+          "correct": 97,
+          "total": 100
+        }
+      },
+      "misclassifications": {
+        "clean_10s": [
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.3744267406362729,
+            "query_time_ms": 457.1805000305176
+          }
+        ],
+        "clean_5s": [
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.23611883250254995,
+            "query_time_ms": 278.3923149108887
+          }
+        ],
+        "clean_3s": [
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.13871846403867172,
+            "query_time_ms": 261.22546195983887
+          }
+        ],
+        "snr_10db": [
+          {
+            "test_file": "148079.mp3",
+            "expected": "148079",
+            "predicted": "122081",
+            "score": 0.0027958702291589477,
+            "query_time_ms": 279.74605560302734
+          },
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.25765005996820156,
+            "query_time_ms": 479.48217391967773
+          },
+          {
+            "test_file": "024748.mp3",
+            "expected": "024748",
+            "predicted": "106955",
+            "score": 0.0018902308285213554,
+            "query_time_ms": 259.19413566589355
+          }
+        ],
+        "snr_5db": [
+          {
+            "test_file": "148079.mp3",
+            "expected": "148079",
+            "predicted": "122081",
+            "score": 0.017343837372618465,
+            "query_time_ms": 252.47502326965332
+          },
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.22567443320542235,
+            "query_time_ms": 3817.5551891326904
+          },
+          {
+            "test_file": "024748.mp3",
+            "expected": "024748",
+            "predicted": "106955",
+            "score": 0.0018844578381265187,
+            "query_time_ms": 252.3038387298584
+          }
+        ],
+        "snr_0db": [
+          {
+            "test_file": "140266.mp3",
+            "expected": "140266",
+            "predicted": "095724",
+            "score": 0.003948656663342542,
+            "query_time_ms": 245.70131301879883
+          },
+          {
+            "test_file": "148079.mp3",
+            "expected": "148079",
+            "predicted": "122081",
+            "score": 0.014441697496880956,
+            "query_time_ms": 261.1663341522217
+          },
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.1966047749417713,
+            "query_time_ms": 387.35222816467285
+          },
+          {
+            "test_file": "024748.mp3",
+            "expected": "024748",
+            "predicted": "106955",
+            "score": 0.0025299087569372603,
+            "query_time_ms": 250.40912628173828
+          },
+          {
+            "test_file": "066637.mp3",
+            "expected": "066637",
+            "predicted": "114879",
+            "score": 0.004428226105913535,
+            "query_time_ms": 252.0432472229004
+          }
+        ],
+        "ir_10s": [
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.3744267406362729,
+            "query_time_ms": 454.2672634124756
+          }
+        ],
+        "ir_snr_5db": [
+          {
+            "test_file": "148079.mp3",
+            "expected": "148079",
+            "predicted": "122081",
+            "score": 0.017343837372618465,
+            "query_time_ms": 250.58484077453613
+          },
+          {
+            "test_file": "114235.mp3",
+            "expected": "114235",
+            "predicted": "125821",
+            "score": 0.22567443320542235,
+            "query_time_ms": 415.0376319885254
+          },
+          {
+            "test_file": "024748.mp3",
+            "expected": "024748",
+            "predicted": "106955",
+            "score": 0.0018844578381265187,
+            "query_time_ms": 256.5479278564453
+          }
+        ]
+      },
+      "avg_confidence": {
+        "clean_10s": 0.48488267872733287,
+        "clean_5s": 0.3419508452829872,
+        "clean_3s": 0.23352385993605063,
+        "snr_10db": 0.42262474909912146,
+        "snr_5db": 0.38819299979644534,
+        "snr_0db": 0.332578234761961,
+        "ir_10s": 0.48488267872733287,
+        "ir_snr_5db": 0.38819299979644534
+      }
+    }
+  ]
+}
