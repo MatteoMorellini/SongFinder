@@ -253,7 +253,8 @@ class ShazamRecognizer(BaseSongRecognizer):
             if song_scores:
                 songs = list(song_scores.keys())
                 scores = np.array(list(song_scores.values()), dtype=np.float64)
-
+                print('songs with the most votes')
+                print(np.sort(scores)[::-1][:20])
                 best_idx = int(np.argmax(scores))
                 best_song_id = songs[best_idx]
 

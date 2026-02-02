@@ -8,7 +8,8 @@ Usage:
     
     # GraFP (requires checkpoint)
     python scripts/index_songs.py --approach grafp --folder ~/datasets/fma_small \
-                                  --checkpoint path/to/model.pth
+                                  --checkpoint path/to/model.pth \
+                                  --chunk-duration 60 --chunk-overlap 30
 """
 
 import argparse
@@ -30,9 +31,25 @@ def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray):
         old_meta = np.load(meta_path, allow_pickle=True)
         old_db = np.memmap(db_path, dtype="float32", mode="r", shape=old_shape)
 
+        # --- normalize metadata shapes to 1D ---
+        old_meta = np.asarray(old_meta, dtype=object).reshape(-1)
+        new_meta = np.asarray(new_meta, dtype=object).reshape(-1)
+
+        # (optional but recommended) sanity checks
+        if old_meta.shape[0] != old_shape[0]:
+            raise ValueError(f"Metadata length ({old_meta.shape[0]}) != db rows ({old_shape[0]})")
+        if new_meta.shape[0] != new_fp.shape[0]:
+            raise ValueError(f"New metadata length ({new_meta.shape[0]}) != new_fp rows ({new_fp.shape[0]})")
+
+        print(f"old meta length: {len(old_meta)}")
+        print(old_meta.shape, new_meta.shape)
+
         # build combined
         combined_shape = (old_shape[0] + new_fp.shape[0], old_shape[1])
         combined_meta = np.concatenate([old_meta, new_meta])
+
+        print(f"new entries: {len(new_meta)}")
+        print(f"updated meta length: {len(combined_meta)}")
 
         # rewrite db.mm with combined content
         new_db = np.memmap(db_path, dtype="float32", mode="w+", shape=combined_shape)
@@ -42,6 +59,7 @@ def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray):
 
         np.save(shape_path, np.array(combined_shape))
         np.save(meta_path, combined_meta)
+
     else:
         # first time
         new_db = np.memmap(db_path, dtype="float32", mode="w+", shape=new_fp.shape)
@@ -86,9 +104,57 @@ def index_shazam(folder: Path, output_dir: Path, pattern: str):
     return recognizer.num_indexed_songs
 
 
+def chunk_audio(waveform: np.ndarray, sr: int, chunk_duration: float, 
+                overlap_duration: float):
+    """
+    Split audio into overlapping chunks.
+    
+    Args:
+        waveform: Audio waveform (1D numpy array)
+        sr: Sample rate
+        chunk_duration: Duration of each chunk in seconds
+        overlap_duration: Overlap between consecutive chunks in seconds
+    
+    Returns:
+        List of tuples (chunk_waveform, start_time_seconds)
+    """
+    chunk_samples = int(chunk_duration * sr)
+    overlap_samples = int(overlap_duration * sr)
+    hop_samples = chunk_samples - overlap_samples
+    
+    chunks = []
+    start_sample = 0
+    
+    while start_sample < len(waveform):
+        end_sample = min(start_sample + chunk_samples, len(waveform))
+        chunk = waveform[start_sample:end_sample]
+        
+        # Only keep chunks that are at least half the target duration
+        # to avoid very short chunks at the end
+        min_duration = chunk_duration * 0.5
+        if len(chunk) >= int(min_duration * sr):
+            start_time = start_sample / sr
+            chunks.append((chunk, start_time))
+        
+        # If we've reached the end, break
+        if end_sample >= len(waveform):
+            break
+            
+        start_sample += hop_samples
+    
+    return chunks
+
+
 def index_grafp(folder: Path, output_dir: Path, checkpoint: str, 
-                config: str, device: str, pattern: str):
-    """Index songs using GraFP approach."""
+                config: str, device: str, pattern: str,
+                chunk_duration: float = 60.0, chunk_overlap: float = 15.0):
+    """
+    Index songs using GraFP approach with chunking.
+    
+    Args:
+        chunk_duration: Duration of each chunk in seconds (default: 60)
+        chunk_overlap: Overlap between chunks in seconds (default: 30)
+    """
     import torch
     import torchaudio
     import numpy as np
@@ -97,6 +163,8 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
     from approaches.grafp.modules.transformations import AudioTransform
     
     print("\n=== GraFP Indexing ===")
+    print(f"Chunk settings: {chunk_duration}s duration, {chunk_overlap}s overlap")
+    print(f"Effective hop: {chunk_duration - chunk_overlap}s")
     
     cfg = load_config(config)
     model = load_model(cfg, checkpoint)
@@ -114,38 +182,60 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
     import soundfile as sf
     
     model.eval()
-    for f in tqdm(audio_files, desc="Generating fingerprints"):
+    total_chunks = 0
+    
+    for f in tqdm(audio_files, desc="Processing songs"):
         try:
-            # Using soundfile instead of torchaudio for better backend stability
+            # Load audio file
             signal, sr = sf.read(f)
-            waveform = torch.from_numpy(signal).float()
+            waveform_np = signal if signal.ndim == 1 else signal.mean(axis=1)
             
-            # Convert to mono if stereo
-            if waveform.ndim > 1:
-                waveform = waveform.mean(dim=1)
-            
+            # Resample if needed
             if sr != cfg['fs']:
-                waveform = torchaudio.transforms.Resample(sr, cfg['fs'])(waveform)
+                waveform_torch = torch.from_numpy(waveform_np).float()
+                waveform_torch = torchaudio.transforms.Resample(sr, cfg['fs'])(waveform_torch)
+                waveform_np = waveform_torch.numpy()
+                sr = cfg['fs']
             
-            segments = transform(waveform.unsqueeze(0).to(device))
+            # Split into chunks
+            chunks = chunk_audio(waveform_np, sr, chunk_duration, chunk_overlap)
             
-            with torch.no_grad():
-                _, _, z, _ = model(segments, segments)
+            if not chunks:
+                print(f"Warning: No valid chunks for {f.name}")
+                continue
             
-            fingerprints.append(z.cpu().numpy())
-            for _ in range(z.shape[0]):
-                metadata.append(f.stem)
+            # Process each chunk
+            for chunk_idx, (chunk_waveform, start_time) in enumerate(chunks):
+                try:
+                    waveform = torch.from_numpy(chunk_waveform).float()
+                    segments = transform(waveform.unsqueeze(0).to(device))
+                    
+                    with torch.no_grad():
+                        _, _, z, _ = model(segments, segments)
+                    
+                    fingerprints.append(z.cpu().numpy())
+                    
+                    # Store metadata - just the song name for all segments
+                    for _ in range(z.shape[0]):
+                        metadata.append(f.stem)
+                    
+                    total_chunks += 1
+                    
+                except Exception as e:
+                    print(f"Error processing chunk {chunk_idx} of {f.name}: {e}")
+                    continue
                 
         except Exception as e:
-            print(f"Error {f.name}: {e}")
+            print(f"Error loading {f.name}: {e}")
+            continue
     
     if fingerprints:
         fp_array = np.concatenate(fingerprints).astype('float32')
-        
         new_meta = np.array(metadata)
         append_grafp_db(output_dir, fp_array, new_meta)
 
-        print(f"✓ Saved {len(audio_files)} songs ({fp_array.shape[0]} segments) to {output_dir}")
+        print(f"✓ Saved {len(audio_files)} songs ({total_chunks} chunks, {fp_array.shape[0]} segments) to {output_dir}")
+        print(f"  Average chunks per song: {total_chunks / len(audio_files):.1f}")
         return len(audio_files)
     
     return 0
@@ -160,6 +250,13 @@ def main():
     parser.add_argument('--checkpoint', type=str, default=None, help='GraFP checkpoint')
     parser.add_argument('--config', type=str, default='approaches/grafp/config/grafp.yaml')
     parser.add_argument('--device', type=str, default='cuda')
+    
+    # Chunking parameters for GraFP
+    parser.add_argument('--chunk-duration', type=float, default=60.0,
+                       help='Duration of each chunk in seconds (GraFP only, default: 60)')
+    parser.add_argument('--chunk-overlap', type=float, default=15.0,
+                       help='Overlap between chunks in seconds (GraFP only, default: 15)')
+    
     args = parser.parse_args()
     
     import torch
@@ -173,6 +270,11 @@ def main():
         print(f"Error: Folder not found: {folder}")
         sys.exit(1)
     
+    # Validate chunking parameters
+    if args.chunk_overlap >= args.chunk_duration:
+        print(f"Error: Chunk overlap ({args.chunk_overlap}s) must be less than chunk duration ({args.chunk_duration}s)")
+        sys.exit(1)
+    
     if args.approach == 'shazam':
         index_shazam(folder, output / "shazam", args.pattern)
         
@@ -181,7 +283,8 @@ def main():
             print("Error: --checkpoint required for GraFP")
             sys.exit(1)
         index_grafp(folder, output / "grafp", args.checkpoint, 
-                   args.config, args.device, args.pattern)
+                   args.config, args.device, args.pattern,
+                   args.chunk_duration, args.chunk_overlap)
 
 
 if __name__ == '__main__':
