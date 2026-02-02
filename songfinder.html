@@ -868,6 +868,7 @@
                 this.audioContext = null;
                 this.analyser = null;
                 this.visualizerAnimationId = null;
+                this.cumulativeVotes = null;  // Shazam cumulative votes across queries
                 
                 // Recognition timing: send at 3s, 5s, 10s, 15s, then stop
                 this.recognitionTimings = [3, 5, 10, 15];
@@ -1085,6 +1086,7 @@
                     // Clear chunk arrays
                     this.audioChunks = [];
                     this.allAudioChunks = [];
+                    this.cumulativeVotes = null;  // Reset cumulative votes for new recording session
 
                     this.updateUI(true);
 
@@ -1233,6 +1235,12 @@
                     const formData = new FormData();
                     formData.append('file', audioBlob, filename);
                     formData.append('method', this.selectedMethod);
+                    
+                    // Include cumulative votes for Shazam
+                    if (this.selectedMethod === 'shazam' && this.cumulativeVotes) {
+                        formData.append('cumulative_votes', JSON.stringify(this.cumulativeVotes));
+                        console.log(`Sending cumulative votes: ${Object.keys(this.cumulativeVotes).length} songs`);
+                    }
 
                     const response = await fetch(CONFIG.API_URL, {
                         method: 'POST',
@@ -1245,6 +1253,12 @@
                     }
 
                     const result = await response.json();
+                    
+                    // Store cumulative votes from Shazam response
+                    if (result.cumulative_votes && this.selectedMethod === 'shazam') {
+                        this.cumulativeVotes = result.cumulative_votes;
+                        console.log(`Received cumulative votes: ${Object.keys(this.cumulativeVotes).length} songs`);
+                    }
                     
                     // Save to history but don't display list
                     this.saveResultToHistory(result, timingSeconds);
@@ -1289,6 +1303,7 @@
 
                 this.audioChunks = [];
                 this.allAudioChunks = [];
+                this.cumulativeVotes = null;  // Clear cumulative votes for next session
                 this.visualizerContainer.classList.remove('active');
                 this.updateUI(false);
             }

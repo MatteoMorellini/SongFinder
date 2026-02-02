@@ -176,6 +176,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         snr_db: Optional[float] = None,
         top_songs_entropy: Optional[int] = 10,
         debug: bool = False,
+        cumulative_votes: Optional[Dict[int, int]] = None,
     ) -> Tuple[Optional[str], float, Dict[str, Any]]:
     
         """
@@ -187,6 +188,7 @@ class ShazamRecognizer(BaseSongRecognizer):
             snr_db: Optional SNR for noise injection
             top_songs_entropy: Number of top songs for entropy calculation
             debug: If True, print timing information for each step
+            cumulative_votes: Optional dict of song_id -> vote_count from previous queries
         
         Returns:
             Tuple of (song_name, score, metadata)
@@ -200,10 +202,23 @@ class ShazamRecognizer(BaseSongRecognizer):
         if clip_length_sec is not None:
             with timer.measure("Cut audio"):
                 signal = cut_audio(signal, sample_rate, clip_length_sec)
+            actual_duration = clip_length_sec
+        else:
+            # Calculate actual duration of the loaded audio
+            actual_duration = len(signal) / sample_rate
         
         if snr_db is not None:
             with timer.measure("Inject noise"):
                 signal = inject_noise(signal, snr_db)
+        
+        # Calculate adaptive max_query_hashes based on duration
+        # Linear scaling: 200 hashes at 3 seconds, 1000 hashes at 15 seconds
+        min_duration, max_duration = 3.0, 15.0
+        min_hashes, max_hashes = 200, 1000
+        
+        clamped_duration = max(min_duration, min(actual_duration, max_duration))
+        adaptive_max_hashes = int(min_hashes + (clamped_duration - min_duration) * 
+                                 (max_hashes - min_hashes) / (max_duration - min_duration))
         
         # Extract fingerprints from query
         with timer.measure("Extract spectrogram"):
@@ -217,7 +232,8 @@ class ShazamRecognizer(BaseSongRecognizer):
         
         # Sample query hashes for faster lookup
         with timer.measure("Sample hashes"):
-            sampled_fingerprints = self._sample_query_hashes(fingerprints, self.max_query_hashes)
+            sampled_fingerprints = self._sample_query_hashes(fingerprints, adaptive_max_hashes)
+        timer.log(f"  Duration: {actual_duration:.1f}s -> {adaptive_max_hashes} max hashes")
         timer.log(f"  Hashes: {len(fingerprints)} -> {len(sampled_fingerprints)}")
         
         # Match against database and vote in single pass
@@ -244,17 +260,55 @@ class ShazamRecognizer(BaseSongRecognizer):
         
         # Find best match by getting peak offset count for each song
         with timer.measure("Scoring preparation"):
-            song_scores = {}
+            # Calculate current query votes
+            current_votes = {}
             for song_id, offset_counts in offset_votes.items():
                 # Get the maximum vote count (most common offset)
-                song_scores[song_id] = max(offset_counts.values())
+                current_votes[song_id] = max(offset_counts.values())
+            
+            # Print current votes (from this query only)
+            if current_votes:
+                current_sorted = sorted(current_votes.items(), key=lambda x: x[1], reverse=True)[:10]
+                #print(f"  Current query votes (top 10): {current_sorted}", flush=True)
+            else:
+                #print("  Current query votes: NONE", flush=True)
+                pass
+            
+            # Start with current votes
+            song_scores = current_votes.copy()
+            
+            # Add cumulative votes from previous queries
+            if cumulative_votes is not None:
+                prev_sorted = sorted(cumulative_votes.items(), key=lambda x: x[1], reverse=True)[:10]
+                #print(f"  Previous cumulative votes (top 10): {prev_sorted}", flush=True)
+                for song_id, prev_votes in cumulative_votes.items():
+                    if song_id in song_scores:
+                        song_scores[song_id] += prev_votes
+                    else:
+                        song_scores[song_id] = prev_votes
+            else:
+                #print("  Previous cumulative votes: NONE (first query)", flush=True)
+                pass
+            
+        
+            # Print combined votes
+            if song_scores:
+                combined_sorted = sorted(song_scores.items(), key=lambda x: x[1], reverse=True)[:10]
+                #print(f"  Combined votes (top 10): {combined_sorted}", flush=True)
+            
+            # Keep only top 20 songs for efficiency
+            if len(song_scores) > 20:
+                top_20_items = heapq.nlargest(20, song_scores.items(), key=lambda x: x[1])
+                song_scores = dict(top_20_items)
+                timer.log(f"  Keeping top 20 songs out of {len(song_scores)} candidates")
         
         with timer.measure("Softmax scoring"):
             if song_scores:
                 songs = list(song_scores.keys())
                 scores = np.array(list(song_scores.values()), dtype=np.float64)
-                print('songs with the most votes')
-                print(np.sort(scores)[::-1][:20])
+                timer.log('  Top songs with votes:')
+                top_scores_display = np.sort(scores)[::-1][:10]  # Show top 10
+                timer.log(f'  {top_scores_display}')
                 best_idx = int(np.argmax(scores))
                 best_song_id = songs[best_idx]
 
@@ -287,9 +341,12 @@ class ShazamRecognizer(BaseSongRecognizer):
         metadata = {
             "num_query_hashes": len(fingerprints),
             "num_sampled_hashes": len(sampled_fingerprints),
+            "adaptive_max_hashes": adaptive_max_hashes,
+            "audio_duration_sec": actual_duration,
             "num_matched_hashes": num_db_hits,
             "num_total_matches": num_matches,
             "num_candidate_songs": len(offset_votes),
+            "cumulative_votes": song_scores,  # Return updated cumulative votes
             "best_song_offset_distribution": dict(offset_votes.get(best_song_id, {})) if best_song_id else {},
             "best_song_score": song_scores.get(best_song_id, 0),
             "timings": timer.timings,

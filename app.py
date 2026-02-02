@@ -137,6 +137,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 class RecognizerResult:
     title: Optional[str]
     confidence: float
+    cumulative_votes: Optional[Dict[int, int]] = None  # Only for Shazam
 
 # -----------------------------
 # Shazam recognizer
@@ -187,7 +188,7 @@ log.info("All recognizers loaded. API is ready to accept requests.")
 # Aggregator function
 # -----------------------------
 
-def run_recognizer(method: str, mp3_path: str) -> RecognizerResult:
+def run_recognizer(method: str, mp3_path: str, cumulative_votes: Optional[Dict[int, int]] = None) -> RecognizerResult:
     method = method.lower().strip()
     if method not in {"shazam", "grafp"}:
         raise HTTPException(status_code=400, detail="method must be 'shazam' or 'grafp'")
@@ -196,7 +197,45 @@ def run_recognizer(method: str, mp3_path: str) -> RecognizerResult:
     log_detail("Audio file", mp3_path)
     
     if method == "shazam":
-        title, confidence, meta = shazam_adapter.recognize(mp3_path, top_songs_entropy = TOP_SONGS_ENTROPY)
+        # Helper function to get song name safely
+        def get_song_name(song_id):
+            try:
+                if hasattr(db_meta, '__getitem__') and 0 <= song_id < len(db_meta):
+                    return str(db_meta[song_id])
+                else:
+                    return f"Song {song_id}"
+            except (IndexError, TypeError):
+                return f"Song {song_id}"
+        
+        # The recognizer handles vote accumulation internally, we just pass cumulative_votes
+        title, confidence, meta = shazam_adapter.recognize(
+            mp3_path, 
+            top_songs_entropy=TOP_SONGS_ENTROPY,
+            cumulative_votes=cumulative_votes,
+            debug=True  # Enable debug mode to see vote details
+        )
+        
+        # Get the updated cumulative votes from the recognizer
+        # The recognizer already adds current votes to cumulative votes
+        updated_votes = meta.get("cumulative_votes", {})
+        
+        # Print updated cumulative votes from app side
+        if updated_votes:
+            log.info("📈 Cumulative votes summary (top 10):")
+            sorted_updated = sorted(updated_votes.items(), key=lambda x: x[1], reverse=True)[:10]
+            for song_id, votes in sorted_updated:
+                song_name = get_song_name(song_id)
+                log_detail(f"  Song {song_id}", f"{song_name} - {votes} votes")
+        
+        # Log result
+        if title:
+            log_success(f"Match found: '{title}' (confidence: {confidence:.2%})")
+        
+        return RecognizerResult(
+            title=title,
+            confidence=float(confidence),
+            cumulative_votes=updated_votes
+        )
     else:
         signal, sr = sf.read(mp3_path)
         waveform = torch.from_numpy(signal).float()
@@ -214,17 +253,16 @@ def run_recognizer(method: str, mp3_path: str) -> RecognizerResult:
             _, _, query_fp, _ = model(segments, segments)
         
         title, confidence = grafp_recognize(query_fp.cpu().numpy(), db_fp, db_meta, faiss_index, top_songs_entropy = TOP_SONGS_ENTROPY)
-
-    # Log result
-    if title:
-        log_success(f"Match found: '{title}' (confidence: {confidence:.2%})")
-    else:
-        log.warning(f"No match found (confidence: {confidence:.2%})")
-
-    return RecognizerResult(
-        title=title,
-        confidence=float(confidence),
-    )
+        
+        # Log result
+        if title:
+            log_success(f"Match found: '{title}' (confidence: {confidence:.2%})")
+        
+        return RecognizerResult(
+            title=title,
+            confidence=float(confidence),
+            cumulative_votes=None  # GraFP doesn't support cumulative votes
+        )
 
 
 # -----------------------------
@@ -296,6 +334,7 @@ def get_stats() -> JSONResponse:
 async def recognize(
     method: str = Form(...),
     file: UploadFile = File(...),
+    cumulative_votes: Optional[str] = Form(None),
 ) -> JSONResponse:
     log.info(f"🎧 New recognition request received")
     log_detail("Method", method)
@@ -367,16 +406,34 @@ async def recognize(
         else:
             processing_path = tmp_path
 
-        result = run_recognizer(method, processing_path)
+        # Parse cumulative_votes from JSON string if provided
+        parsed_cumulative_votes = None
+        if cumulative_votes and method.lower().strip() == "shazam":
+            try:
+                import json
+                raw_votes = json.loads(cumulative_votes)
+                # Convert string keys back to int (JSON doesn't support int keys)
+                parsed_cumulative_votes = {int(k): v for k, v in raw_votes.items()}
+                log_detail("Cumulative votes received", f"{len(parsed_cumulative_votes)} songs")
+            except (json.JSONDecodeError, ValueError) as e:
+                log.warning(f"Failed to parse cumulative_votes: {e}")
+        
+        result = run_recognizer(method, processing_path, parsed_cumulative_votes)
 
         log.info("✨ Request completed successfully")
-        return JSONResponse(
-            {
-                "method": method.lower().strip(),
-                "title": result.title,
-                "confidence": result.confidence,   # normalized [0,1]
-            }
-        )
+        
+        response_data = {
+            "method": method.lower().strip(),
+            "title": result.title,
+            "confidence": result.confidence,   # normalized [0,1]
+        }
+        
+        # Include cumulative_votes in response for Shazam
+        if result.cumulative_votes is not None:
+            # Convert int keys to strings for JSON serialization
+            response_data["cumulative_votes"] = {str(k): v for k, v in result.cumulative_votes.items()}
+        
+        return JSONResponse(response_data)
     except HTTPException:
         raise
     except Exception as e:
