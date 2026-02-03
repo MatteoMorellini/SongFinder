@@ -47,27 +47,17 @@ class MisclassificationRecord:
 @dataclass
 class HyperparamConfig:
     """Configuration for Shazam hyperparameters."""
-    fuz_factor: int = 2
     target_sr: int = 11025
     n_fft: int = 2048
-    hop_ratio: int = 6  # hop_length = n_fft / hop_ratio (6 ≈ default 368 for n_fft=2048)
     fan_out: int = 5
     
-    @property
-    def hop_length(self) -> int:
-        """Compute hop_length from n_fft and hop_ratio."""
-        return self.n_fft // self.hop_ratio
-    
     def __str__(self) -> str:
-        return f"fuz{self.fuz_factor}_sr{self.target_sr}_nfft{self.n_fft}_hop{self.hop_length}(1/{self.hop_ratio})_fan{self.fan_out}"
+        return f"sr{self.target_sr}_nfft{self.n_fft}_fan{self.fan_out}"
     
     def to_dict(self) -> dict:
         return {
-            "fuz_factor": self.fuz_factor,
             "target_sr": self.target_sr,
             "n_fft": self.n_fft,
-            "hop_ratio": self.hop_ratio,
-            "hop_length": self.hop_length,  # computed value for reference
             "fan_out": self.fan_out
         }
     
@@ -75,10 +65,8 @@ class HyperparamConfig:
     def from_dict(cls, d: dict) -> "HyperparamConfig":
         """Reconstruct config from dict (ignores computed hop_length)."""
         return cls(
-            fuz_factor=d["fuz_factor"],
             target_sr=d["target_sr"],
             n_fft=d["n_fft"],
-            hop_ratio=d["hop_ratio"],
             fan_out=d["fan_out"],
         )
 
@@ -101,18 +89,16 @@ class HyperparamBenchmarkResults:
 
 # Hyperparameter grid to search
 DEFAULT_HYPERPARAM_GRID = {
-    "target_sr": [11025],
-    "n_fft": [2048],
-    "fan_out": [5],
+    "target_sr": [8000, 11025, 16000],
+    "n_fft": [1024, 2048, 4096],
+    "fan_out": [3, 5, 10],
 }
 
 
 def set_shazam_env_vars(config: HyperparamConfig) -> None:
     """Set environment variables for Shazam configuration."""
-    os.environ["SHAZAM_FUZ_FACTOR"] = str(config.fuz_factor)
     os.environ["SHAZAM_TARGET_SR"] = str(config.target_sr)
     os.environ["SHAZAM_N_FFT"] = str(config.n_fft)
-    os.environ["SHAZAM_HOP_LENGTH"] = str(config.hop_length)
     os.environ["SHAZAM_FAN_OUT"] = str(config.fan_out)
 
 
@@ -153,6 +139,7 @@ def benchmark_shazam_with_config(
     # Use preloaded recognizer or load fresh
     if preloaded_recognizer is not None:
         recognizer = preloaded_recognizer
+        recognizer.update()
         db_load_time = 0.0
         print("  Using preloaded recognizer")
     else:
@@ -277,10 +264,8 @@ def generate_hyperparam_configs(
             for value in values:
                 if value != getattr(default, param):
                     new_config = HyperparamConfig(
-                        fuz_factor=value if param == "fuz_factor" else default.fuz_factor,
                         target_sr=value if param == "target_sr" else default.target_sr,
                         n_fft=value if param == "n_fft" else default.n_fft,
-                        hop_ratio=value if param == "hop_ratio" else default.hop_ratio,
                         fan_out=value if param == "fan_out" else default.fan_out,
                     )
                     configs.append(new_config)
@@ -405,14 +390,10 @@ def main():
                         help='Number of misclassifications to show per condition (default: 20)')
     
     # Individual hyperparameter overrides
-    parser.add_argument('--fuz_factors', type=int, nargs='+', default=None,
-                        help='FUZ_FACTOR values to test')
     parser.add_argument('--target_srs', type=int, nargs='+', default=None,
                         help='TARGET_SR values to test')
     parser.add_argument('--n_ffts', type=int, nargs='+', default=None,
                         help='N_FFT values to test')
-    parser.add_argument('--hop_ratios', type=int, nargs='+', default=None,
-                        help='HOP_RATIO values to test (hop_length = n_fft / ratio)')
     parser.add_argument('--fan_outs', type=int, nargs='+', default=None,
                         help='FAN_OUT values to test')
     
@@ -429,14 +410,10 @@ def main():
     
     # Build hyperparameter grid
     grid = DEFAULT_HYPERPARAM_GRID.copy()
-    if args.fuz_factors:
-        grid["fuz_factor"] = args.fuz_factors
     if args.target_srs:
         grid["target_sr"] = args.target_srs
     if args.n_ffts:
         grid["n_fft"] = args.n_ffts
-    if args.hop_ratios:
-        grid["hop_ratio"] = args.hop_ratios
     if args.fan_outs:
         grid["fan_out"] = args.fan_outs
     

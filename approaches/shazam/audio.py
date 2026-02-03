@@ -1,7 +1,8 @@
+import os
 import librosa
 import numpy as np
 import soundfile as sf
-from .config import TARGET_SR, N_FFT, HOP_LENGTH
+from .config import HOP_LENGTH
 import matplotlib.pyplot as plt
 import librosa.display
 from pathlib import Path
@@ -101,14 +102,14 @@ Multiple strategies to speed up STFT computation, which is often the bottleneck.
 import numpy as np
 import librosa
 import scipy.signal
-from .config import N_FFT, TARGET_SR, HOP_LENGTH
+from .config import HOP_LENGTH
 
 
 # ============================================================================
 # STRATEGY 1: Use scipy.signal.stft (often faster than librosa)
 # ============================================================================
 
-def extract_spectrogram_scipy(signal, sample_rate):
+def extract_spectrogram_scipy(signal, sample_rate, N_FFT, TARGET_SR):
     """
     Use scipy's STFT implementation which is often faster than librosa.
     
@@ -136,7 +137,7 @@ def extract_spectrogram_scipy(signal, sample_rate):
 # STRATEGY 2: Cache resampling (if processing same file multiple times)
 # ============================================================================
 
-def extract_spectrogram_cached_resample(signal, sample_rate, _cache={}):
+def extract_spectrogram_cached_resample(signal, sample_rate, N_FFT, TARGET_SR, _cache={}):
     """
     Cache the resampled signal to avoid redundant resampling.
     Useful if you process the same audio multiple times.
@@ -165,7 +166,7 @@ def extract_spectrogram_cached_resample(signal, sample_rate, _cache={}):
 # STRATEGY 3: Skip resampling if already at target rate
 # ============================================================================
 
-def extract_spectrogram_smart_resample(signal, sample_rate):
+def extract_spectrogram_smart_resample(signal, sample_rate, N_FFT, TARGET_SR):
     """
     Only resample if necessary. Many audio files are already at 44.1kHz or 22.05kHz.
     
@@ -187,7 +188,7 @@ def extract_spectrogram_smart_resample(signal, sample_rate):
 # STRATEGY 4: Lower resolution STFT (trade accuracy for speed)
 # ============================================================================
 
-def extract_spectrogram_low_res(signal, sample_rate, n_fft_override=1024):
+def extract_spectrogram_low_res(signal, sample_rate, N_FFT, TARGET_SR, n_fft_override=1024):
     """
     Use smaller FFT window for faster computation.
     
@@ -216,7 +217,7 @@ def extract_spectrogram_low_res(signal, sample_rate, n_fft_override=1024):
 # STRATEGY 5: Combined optimization (RECOMMENDED)
 # ============================================================================
 
-def extract_spectrogram_optimized(signal, sample_rate):
+def extract_spectrogram_optimized(signal, sample_rate, N_FFT, TARGET_SR):
     """
     Combines multiple optimizations for best performance.
     
@@ -257,7 +258,7 @@ def extract_spectrogram_optimized(signal, sample_rate):
 # STRATEGY 6: Parallel processing (for batch indexing)
 # ============================================================================
 
-def extract_spectrogram_batch(signals_and_rates, n_jobs=-1):
+def extract_spectrogram_batch(signals_and_rates, N_FFT, TARGET_SR, n_jobs=-1):
     """
     Process multiple spectrograms in parallel using joblib.
     
@@ -286,7 +287,7 @@ def extract_spectrogram_batch(signals_and_rates, n_jobs=-1):
 # STRATEGY 7: GPU acceleration (if CUDA available)
 # ============================================================================
 
-def extract_spectrogram_gpu(signal, sample_rate):
+def extract_spectrogram_gpu(signal, sample_rate, N_FFT, TARGET_SR):
     """
     Use GPU-accelerated STFT via CuPy (if available).
     
@@ -330,10 +331,11 @@ def extract_spectrogram_gpu(signal, sample_rate):
 # ORIGINAL (for comparison)
 # ============================================================================
 
-def extract_spectrogram_original(signal, sample_rate):
+def extract_spectrogram_original(signal, sample_rate, N_FFT, TARGET_SR):
     """Original implementation for comparison."""
     if signal.ndim > 1:
         signal = librosa.to_mono(signal.T)
+        
     
     signal = librosa.resample(signal, orig_sr=sample_rate, target_sr=TARGET_SR)
     stft = librosa.stft(signal, n_fft=N_FFT, hop_length=HOP_LENGTH)
@@ -370,11 +372,14 @@ def extract_spectrogram(signal, sample_rate, strategy='optimized'):
         'low_res': extract_spectrogram_low_res,
         'gpu': extract_spectrogram_gpu,
     }
+
+    N_FFT = int(os.environ["SHAZAM_N_FFT"])
+    TARGET_SR = float(os.environ["SHAZAM_TARGET_SR"])
     
     if strategy not in strategies:
         raise ValueError(f"Unknown strategy: {strategy}. Choose from {list(strategies.keys())}")
     
-    return strategies[strategy](signal, sample_rate)
+    return strategies[strategy](signal, sample_rate, N_FFT, TARGET_SR)
 
 # ============================================================================
 # Switch from librosa to torchaudio
@@ -383,6 +388,8 @@ def extract_spectrogram(signal, sample_rate, strategy='optimized'):
 def extract_spectrogram_fast(signal, sample_rate):
     # signal: np.ndarray float32/float64, shape (n,) or (n, ch)
     x = torch.tensor(signal)
+    N_FFT = int(os.environ["SHAZAM_N_FFT"])
+    TARGET_SR = float(os.environ["SHAZAM_TARGET_SR"])
 
     if x.ndim > 1:
         x = x.mean(dim=-1)  # mono (if shape is (n, ch); adapt if reversed)

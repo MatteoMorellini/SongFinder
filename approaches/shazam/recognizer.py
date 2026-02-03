@@ -7,6 +7,7 @@ import librosa
 from tqdm import tqdm
 import heapq
 import time
+import os
 
 from approaches.base import BaseSongRecognizer
 from .config import BANDS, N_FFT, TARGET_SR, HOP_LENGTH
@@ -70,6 +71,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         self.song_table: Dict[str, int] = {}
         self.max_query_hashes = max_query_hashes
         self.freqs = np.fft.rfftfreq(N_FFT, d=1.0 / TARGET_SR)
+        self.fan_out = 5
 
         
     @property
@@ -113,7 +115,7 @@ class ShazamRecognizer(BaseSongRecognizer):
         peaks = find_peaks(spectrogram, BANDS)
         
         song_id = get_song_id(self.song_table, song_name)
-        fingerprints = build_hashes(peaks, self.freqs, song_id=song_id)
+        fingerprints = build_hashes(peaks, self.freqs, song_id=song_id, fan_out=self.fan_out)
         add_hashes_to_table(self.hash_table, fingerprints)
     
     def index_folder(self, folder: Path, pattern: str = "*.flac") -> int:
@@ -167,7 +169,18 @@ class ShazamRecognizer(BaseSongRecognizer):
 
         return chosen[:max_hashes]
 
+    def update(
+        self,
+    ):
+        TARGET_SR = float(os.environ["SHAZAM_TARGET_SR"])
+        N_FFT = int(os.environ["SHAZAM_N_FFT"])
 
+        self.freqs = np.fft.rfftfreq(N_FFT, d=1.0 / TARGET_SR)
+        self.fan_out = int(os.environ["SHAZAM_FAN_OUT"])
+
+        #print(f"target_sr: {TARGET_SR}\n n_fft: {N_FFT}\n fan_out: {self.fan_out}")
+
+        # check what hyperparameter is used for the STFT
     
     def recognize(
         self, 
@@ -228,7 +241,7 @@ class ShazamRecognizer(BaseSongRecognizer):
             peaks = find_peaks(spectrogram, BANDS)
         
         with timer.measure("Build hashes"):
-            fingerprints = build_hashes(peaks, self.freqs)
+            fingerprints = build_hashes(peaks, self.freqs, fan_out = self.fan_out)
         
         # Sample query hashes for faster lookup
         with timer.measure("Sample hashes"):
