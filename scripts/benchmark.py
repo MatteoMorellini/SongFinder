@@ -13,7 +13,6 @@ Usage:
                                 --n_test 100
 """
 
-import os
 import sys
 import json
 import time
@@ -22,13 +21,13 @@ import argparse
 from pathlib import Path
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Dict
-from collections import Counter
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
 import torch
-import torchaudio
+
+from utils.augmentation import create_augmented_query, load_audio
 
 
 @dataclass
@@ -50,11 +49,11 @@ class BenchmarkResults:
 
 # Test conditions to evaluate
 TEST_CONDITIONS = [
-    TestCondition("clean_10s", clip_length_sec=10.0),
-    TestCondition("clean_5s", clip_length_sec=5.0),
-    TestCondition("clean_3s", clip_length_sec=3.0),
-    TestCondition("snr_10db", clip_length_sec=10.0, snr_db=10.0),
-    TestCondition("snr_5db", clip_length_sec=10.0, snr_db=5.0),
+    # TestCondition("clean_10s", clip_length_sec=10.0),
+    # TestCondition("clean_5s", clip_length_sec=5.0),
+    # TestCondition("clean_3s", clip_length_sec=3.0),
+    # TestCondition("snr_10db", clip_length_sec=10.0, snr_db=10.0),
+    # TestCondition("snr_5db", clip_length_sec=10.0, snr_db=5.0),
     TestCondition("snr_0db", clip_length_sec=10.0, snr_db=0.0),
     TestCondition("ir_10s", clip_length_sec=10.0, use_ir=True),
     TestCondition("ir_snr_5db", clip_length_sec=10.0, snr_db=5.0, use_ir=True),
@@ -75,112 +74,7 @@ def load_ir_files(aug_dir: Path) -> List[Path]:
     ir_dir = aug_dir / "ir" if (aug_dir / "ir").exists() else aug_dir / "rir"
     if not ir_dir.exists():
         ir_dir = aug_dir
-    ir_files = list(ir_dir.rglob("*.wav"))
-    return ir_files
-
-
-def add_noise(signal: np.ndarray, snr_db: float, noise_files: List[Path], sr: int) -> np.ndarray:
-    """Add noise to signal at specified SNR."""
-    if not noise_files:
-        # Fallback to white noise
-        signal_power = np.mean(signal ** 2)
-        noise_power = signal_power / (10 ** (snr_db / 10))
-        noise = np.random.normal(0, np.sqrt(noise_power), len(signal))
-        return signal + noise
-    
-    # Load random noise file
-    noise_file = random.choice(noise_files)
-    try:
-        noise, noise_sr = torchaudio.load(noise_file)
-        noise = noise.mean(dim=0).numpy()
-        
-        if noise_sr != sr:
-            # Simple resampling
-            noise = np.interp(
-                np.linspace(0, len(noise), int(len(noise) * sr / noise_sr)),
-                np.arange(len(noise)),
-                noise
-            )
-        
-        # Tile or truncate to match signal length
-        if len(noise) < len(signal):
-            noise = np.tile(noise, int(np.ceil(len(signal) / len(noise))))
-        noise = noise[:len(signal)]
-        
-        # Scale noise to desired SNR
-        signal_power = np.mean(signal ** 2) + 1e-10
-        noise_power = np.mean(noise ** 2) + 1e-10
-        target_noise_power = signal_power / (10 ** (snr_db / 10))
-        noise = noise * np.sqrt(target_noise_power / noise_power)
-        
-        return signal + noise
-    except:
-        return signal
-
-
-def apply_ir(signal: np.ndarray, ir_files: List[Path], sr: int) -> np.ndarray:
-    """Apply impulse response convolution."""
-    if not ir_files:
-        return signal
-    
-    ir_file = random.choice(ir_files)
-    try:
-        from scipy.signal import fftconvolve
-        
-        ir, ir_sr = torchaudio.load(ir_file)
-        ir = ir.mean(dim=0).numpy()
-        
-        if ir_sr != sr:
-            ir = np.interp(
-                np.linspace(0, len(ir), int(len(ir) * sr / ir_sr)),
-                np.arange(len(ir)),
-                ir
-            )
-        
-        # Convolve and normalize
-        convolved = fftconvolve(signal, ir, mode='same')
-        convolved = convolved / (np.max(np.abs(convolved)) + 1e-10) * np.max(np.abs(signal))
-        
-        return convolved.astype(np.float32)
-    except:
-        return signal
-
-
-def create_query(
-    audio_path: Path,
-    condition: TestCondition,
-    noise_files: List[Path],
-    ir_files: List[Path],
-    target_sr: int = 8000
-) -> np.ndarray:
-    """Create a query audio with specified augmentation."""
-    waveform, sr = torchaudio.load(audio_path)
-    waveform = waveform.mean(dim=0).numpy()
-    
-    # Resample
-    if sr != target_sr:
-        waveform = np.interp(
-            np.linspace(0, len(waveform), int(len(waveform) * target_sr / sr)),
-            np.arange(len(waveform)),
-            waveform
-        ).astype(np.float32)
-        sr = target_sr
-    
-    # Cut clip
-    clip_samples = int(condition.clip_length_sec * sr)
-    if len(waveform) > clip_samples:
-        start = random.randint(0, len(waveform) - clip_samples)
-        waveform = waveform[start:start + clip_samples]
-    
-    # Apply IR
-    if condition.use_ir:
-        waveform = apply_ir(waveform, ir_files, sr)
-    
-    # Add noise
-    if condition.snr_db is not None:
-        waveform = add_noise(waveform, condition.snr_db, noise_files, sr)
-    
-    return waveform
+    return list(ir_dir.rglob("*.wav"))
 
 
 def benchmark_shazam(
@@ -188,14 +82,15 @@ def benchmark_shazam(
     test_files: List[Path],
     noise_files: List[Path],
     ir_files: List[Path],
-    conditions: List[TestCondition]
+    conditions: List[TestCondition],
+    target_sr: int = 8000,
+    example_dir: Optional[Path] = None
 ) -> BenchmarkResults:
-    """Benchmark Shazam approach."""
+    """Benchmark Shazam with on-the-fly augmentation using deterministic seeds."""
     from approaches.shazam import ShazamRecognizer
     
     print("\n=== Shazam Benchmark ===")
     
-    # Load database
     start = time.time()
     recognizer = ShazamRecognizer()
     recognizer.load(db_dir / "shazam")
@@ -210,20 +105,34 @@ def benchmark_shazam(
     
     print(f"Loaded {results.n_db_songs} songs in {db_load_time:.1f}ms")
     
-    for condition in conditions:
+    for cond_idx, condition in enumerate(conditions):
         correct = 0
         total = 0
         query_times = []
         
-        for test_file in test_files:
+        for file_idx, test_file in enumerate(test_files):
             expected = test_file.stem
+            # Deterministic seed based on condition and file index
+            seed = cond_idx * 10000 + file_idx
             
             try:
+                query_audio = create_augmented_query(
+                    audio_path=test_file,
+                    clip_length_sec=condition.clip_length_sec,
+                    target_sr=target_sr,
+                    snr_db=condition.snr_db,
+                    use_ir=condition.use_ir,
+                    ir_files=ir_files if condition.use_ir else None,
+                    noise_files=noise_files if condition.snr_db is not None else None,
+                    seed=seed,
+                    save_example_dir=example_dir,
+                    example_prefix=f"shazam_{condition.name}"
+                )
+                
                 start = time.time()
                 song, score, _ = recognizer.recognize(
-                    test_file,
-                    clip_length_sec=condition.clip_length_sec,
-                    snr_db=condition.snr_db
+                    signal=query_audio,
+                    sample_rate=target_sr
                 )
                 query_time = (time.time() - start) * 1000
                 query_times.append(query_time)
@@ -233,6 +142,7 @@ def benchmark_shazam(
                 total += 1
                 
             except Exception as e:
+                print(f"  Error {test_file.name}: {e}")
                 total += 1
         
         accuracy = correct / total * 100 if total > 0 else 0
@@ -258,27 +168,26 @@ def benchmark_grafp(
     conditions: List[TestCondition],
     config_path: str,
     checkpoint_path: str,
-    device: str = "cuda"
+    device: str = "cuda",
+    example_dir: Optional[Path] = None
 ) -> BenchmarkResults:
-    """Benchmark GraFP approach."""
+    """Benchmark GraFP with on-the-fly augmentation using deterministic seeds."""
     from approaches.grafp import load_config, load_model
     from approaches.grafp.modules.transformations import AudioTransform
-    from approaches.grafp.inference import recognize, build_index
+    from approaches.grafp.inference import recognize
     
     print("\n=== GraFP Benchmark ===")
     
-    # Load config and model
     cfg = load_config(config_path)
     model = load_model(cfg, checkpoint_path)
     transform = AudioTransform(cfg).to(device)
+    target_sr = cfg['fs']  # Use GraFP's native sample rate
     
-    # Load database
     start = time.time()
     from approaches.grafp.inference import load_fingerprints, get_or_build_index
     db_fp, db_meta = load_fingerprints(db_dir / "grafp")
     db_load_time = (time.time() - start) * 1000
 
-    # Load or build FAISS index with persistence
     index_path = db_dir / "grafp" / "index_ivfpq.faiss"
     index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)
     
@@ -293,21 +202,30 @@ def benchmark_grafp(
 
     model.eval()
     
-    for condition in conditions:
+    for cond_idx, condition in enumerate(conditions):
         correct = 0
         total = 0
         query_times = []
         
-        for test_file in test_files:
+        for file_idx, test_file in enumerate(test_files):
             expected = test_file.stem
+            # Same deterministic seed as Shazam for identical augmentation choices
+            seed = cond_idx * 10000 + file_idx
             
             try:
-                # Create augmented query
-                query_audio = create_query(
-                    test_file, condition, noise_files, ir_files, cfg['fs']
+                query_audio = create_augmented_query(
+                    audio_path=test_file,
+                    clip_length_sec=condition.clip_length_sec,
+                    target_sr=target_sr,
+                    snr_db=condition.snr_db,
+                    use_ir=condition.use_ir,
+                    ir_files=ir_files if condition.use_ir else None,
+                    noise_files=noise_files if condition.snr_db is not None else None,
+                    seed=seed,
+                    save_example_dir=example_dir,
+                    example_prefix=f"grafp_{condition.name}"
                 )
                 
-                # Measure inference time only
                 start = time.time()
                 
                 waveform = torch.from_numpy(query_audio).float()
@@ -421,18 +339,25 @@ def main():
     ir_files = load_ir_files(aug_dir)
     print(f"Noise files: {len(noise_files)}, IR files: {len(ir_files)}")
     
+    # Create examples directory
+    example_dir = Path("examples/reverb")
+    example_dir.mkdir(parents=True, exist_ok=True)
+    
     results = {}
     
-    # Shazam
+    # Shazam (uses 8000 Hz)
     if not args.grafp_only and (db_dir / "shazam").exists():
-        shazam_results = benchmark_shazam(db_dir, test_files, noise_files, ir_files, TEST_CONDITIONS)
+        shazam_results = benchmark_shazam(
+            db_dir, test_files, noise_files, ir_files, TEST_CONDITIONS,
+            target_sr=8000, example_dir=example_dir
+        )
         results["shazam"] = asdict(shazam_results)
     
-    # GraFP
+    # GraFP (uses its own sample rate from config)
     if not args.shazam_only and args.checkpoint and (db_dir / "grafp").exists():
         grafp_results = benchmark_grafp(
             db_dir, test_files, noise_files, ir_files, TEST_CONDITIONS,
-            args.config, args.checkpoint, args.device
+            args.config, args.checkpoint, args.device, example_dir=example_dir
         )
         results["grafp"] = asdict(grafp_results)
     
@@ -453,3 +378,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+

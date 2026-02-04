@@ -1,9 +1,8 @@
-from collections import defaultdict, Counter
+from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
 import numpy as np
-import librosa
 from tqdm import tqdm
 import heapq
 import time
@@ -12,7 +11,7 @@ import os
 from approaches.base import BaseSongRecognizer
 from .config import BANDS, N_FFT, TARGET_SR, HOP_LENGTH
 from .db import load_db, save_db, get_song_id
-from .audio import load_audio, extract_spectrogram, find_peaks, cut_audio, inject_noise, extract_spectrogram_fast
+from .audio import load_audio, extract_spectrogram, find_peaks, cut_audio, extract_spectrogram_fast
 from .hashing import build_hashes, add_hashes_to_table
 
 from mutagen.mp3 import MP3
@@ -105,7 +104,6 @@ class ShazamRecognizer(BaseSongRecognizer):
         else:
             song_name = audio_path.stem
 
-        print(f"song_name is {song_name}")
 
         if song_name in self.song_table:
             return  # Already indexed
@@ -177,28 +175,27 @@ class ShazamRecognizer(BaseSongRecognizer):
 
         self.freqs = np.fft.rfftfreq(N_FFT, d=1.0 / TARGET_SR)
         self.fan_out = int(os.environ["SHAZAM_FAN_OUT"])
-
-        #print(f"target_sr: {TARGET_SR}\n n_fft: {N_FFT}\n fan_out: {self.fan_out}")
-
-        # check what hyperparameter is used for the STFT
     
     def recognize(
         self, 
-        query_path: Path, 
+        query_path: Optional[Path] = None,
+        signal: Optional[np.ndarray] = None,
+        sample_rate: Optional[int] = None,
         clip_length_sec: Optional[float] = None,
-        snr_db: Optional[float] = None,
         top_songs_entropy: Optional[int] = 10,
         debug: bool = False,
         cumulative_votes: Optional[Dict[int, int]] = None,
     ) -> Tuple[Optional[str], float, Dict[str, Any]]:
-    
         """
-        Recognize a song from an audio query.
+        Recognize a song from audio.
+        
+        Provide EITHER query_path (to load from file) OR signal+sample_rate (pre-processed audio).
         
         Args:
             query_path: Path to the audio file to recognize
-            clip_length_sec: Optional clip length in seconds
-            snr_db: Optional SNR for noise injection
+            signal: Pre-processed audio signal (1D numpy array)
+            sample_rate: Sample rate of the signal (required if signal is provided)
+            clip_length_sec: Optional clip length in seconds (only used with query_path)
             top_songs_entropy: Number of top songs for entropy calculation
             debug: If True, print timing information for each step
             cumulative_votes: Optional dict of song_id -> vote_count from previous queries
@@ -208,24 +205,25 @@ class ShazamRecognizer(BaseSongRecognizer):
         """
         timer = Timer(debug=debug)
         
-        # Load and preprocess query audio
-        with timer.measure("Load audio"):
-            signal, sample_rate = load_audio(query_path)
-        
-        if clip_length_sec is not None:
-            with timer.measure("Cut audio"):
-                signal = cut_audio(signal, sample_rate, clip_length_sec)
-            actual_duration = clip_length_sec
-        else:
-            # Calculate actual duration of the loaded audio
+        # Load audio from file or use provided signal
+        if signal is not None:
+            if sample_rate is None:
+                raise ValueError("sample_rate is required when signal is provided")
             actual_duration = len(signal) / sample_rate
-        
-        if snr_db is not None:
-            with timer.measure("Inject noise"):
-                signal = inject_noise(signal, snr_db)
+        elif query_path is not None:
+            with timer.measure("Load audio"):
+                signal, sample_rate = load_audio(query_path)
+            
+            if clip_length_sec is not None:
+                with timer.measure("Cut audio"):
+                    signal = cut_audio(signal, sample_rate, clip_length_sec)
+                actual_duration = clip_length_sec
+            else:
+                actual_duration = len(signal) / sample_rate
+        else:
+            raise ValueError("Either query_path or signal must be provided")
         
         # Calculate adaptive max_query_hashes based on duration
-        # Linear scaling: 200 hashes at 3 seconds, 1000 hashes at 15 seconds
         min_duration, max_duration = 3.0, 15.0
         min_hashes, max_hashes = 200, 1000
         
@@ -279,35 +277,21 @@ class ShazamRecognizer(BaseSongRecognizer):
                 # Get the maximum vote count (most common offset)
                 current_votes[song_id] = max(offset_counts.values())
             
-            # Print current votes (from this query only)
             if current_votes:
                 current_sorted = sorted(current_votes.items(), key=lambda x: x[1], reverse=True)[:10]
-                #print(f"  Current query votes (top 10): {current_sorted}", flush=True)
-            else:
-                #print("  Current query votes: NONE", flush=True)
-                pass
             
-            # Start with current votes
             song_scores = current_votes.copy()
             
-            # Add cumulative votes from previous queries
             if cumulative_votes is not None:
                 prev_sorted = sorted(cumulative_votes.items(), key=lambda x: x[1], reverse=True)[:10]
-                #print(f"  Previous cumulative votes (top 10): {prev_sorted}", flush=True)
                 for song_id, prev_votes in cumulative_votes.items():
                     if song_id in song_scores:
                         song_scores[song_id] += prev_votes
                     else:
                         song_scores[song_id] = prev_votes
-            else:
-                #print("  Previous cumulative votes: NONE (first query)", flush=True)
-                pass
             
-        
-            # Print combined votes
             if song_scores:
                 combined_sorted = sorted(song_scores.items(), key=lambda x: x[1], reverse=True)[:10]
-                #print(f"  Combined votes (top 10): {combined_sorted}", flush=True)
             
             # Keep only top 20 songs for efficiency
             if len(song_scores) > 20:

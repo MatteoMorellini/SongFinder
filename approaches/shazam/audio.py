@@ -1,13 +1,9 @@
-import os
 import librosa
 import numpy as np
 import soundfile as sf
-from .config import HOP_LENGTH
-import matplotlib.pyplot as plt
-import librosa.display
 from pathlib import Path
-import torch
-import torchaudio
+
+from .config import HOP_LENGTH
 
 def load_audio(path):
     signal, sr = sf.read(path)
@@ -21,33 +17,6 @@ def cut_audio(signal, sample_rate, clip_length_sec):
     end = start + clip_samples
     return signal[start:end]
 
-def inject_noise(signal, snr_db):
-    """
-    Add white Gaussian noise to `signal` to get the desired SNR in dB.
-    Assumes `signal` is a 1D float numpy array.
-    """
-
-    # make sure we work in float
-    signal = signal.astype(float)
-
-    # signal power (mean square)
-    signal_power = np.mean(signal ** 2)
-
-    if signal_power == 0:
-        # silent signal, just return it (or raise)
-        return signal
-
-    # desired noise power
-    noise_power = signal_power / (10 ** (snr_db / 10))
-
-    # noise standard deviation
-    noise_std = np.sqrt(noise_power)
-
-    # generate white Gaussian noise
-    noise = np.random.normal(0.0, noise_std, size=signal.shape)
-
-    # noisy signal
-    return signal + noise
 
 def find_peaks(spectrogram, bands):
     peaks = []  # list of (time_index, freq_bin_index, amplitude)
