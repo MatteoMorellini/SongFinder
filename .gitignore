@@ -13,3 +13,5 @@ __pycache__/
 pyg312/
 previous_fingerprints/
 checkpoint/
+
+aug/

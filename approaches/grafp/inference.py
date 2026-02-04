@@ -98,20 +98,226 @@ def load_fingerprints(source_dir, name='db'):
     return np.array(data), metadata
 
 
-def build_index(fingerprints, use_gpu=False):
-    """Build FAISS index for similarity search."""
+def get_index(index_type,
+              train_data,
+              train_data_shape,
+              use_gpu=True,
+              max_nitem_train=2e7,
+              n_centroids=64,
+):
+    """
+    • Create FAISS index
+    • Train index using (partial) data
+    • Return index
+    Parameters
+    ----------
+    index_type : (str)
+        Index type must be one of {'L2', 'IVF', 'IVFPQ', 'IVFPQ-RR',
+                                   'IVFPQ-ONDISK', HNSW'}
+    train_data : (float32)
+        numpy.memmap or numpy.ndarray
+    train_data_shape : list(int, int)
+        Data shape (n, d). n is the number of items. d is dimension.
+    use_gpu: (bool)
+        If False, use CPU. Default is True.
+    max_nitem_train : (int)
+        Max number of items to be used for training index. Default is 1e7.
+    Returns
+    -------
+    index : (faiss.swigfaiss_avx2.GpuIndex***)
+        Trained FAISS index.
+    References:
+        https://github.com/facebookresearch/faiss/wiki/Faiss-indexes
+    """
+    # GPU Setup
+    if use_gpu:
+        GPU_RESOURCES = faiss.StandardGpuResources()
+        GPU_OPTIONS = faiss.GpuClonerOptions()
+        GPU_OPTIONS.useFloat16 = True
+
+    # Fingerprint dimension
+    d = train_data_shape[1]
+
+    # Build a flat (CPU) index
+    index = faiss.IndexFlatL2(d)
+
+    mode = index_type.lower()
+    print(f'Creating index: \033[93m{mode}\033[0m')
+    if mode == 'l2':
+        # Using L2 index
+        pass
+    elif mode == 'ivf':
+        # Using IVF index
+        nlist = 400
+        index = faiss.IndexIVFFlat(index, d, nlist)
+    elif mode == 'ivfpq':
+        code_sz = 8
+        nbits = 8
+        index = faiss.IndexIVFPQ(index, d, n_centroids, code_sz, nbits)
+
+    elif mode == 'lsh':
+        # Using LSH index
+        nbits = 256
+        index = faiss.IndexLSH(d, nbits)
+
+
+    elif mode == 'ivfpq-rr':
+        code_sz = 64
+        nbits = 8
+        M_refine = 4
+        nbits_refine = 4
+        index = faiss.IndexIVFPQR(index, d, n_centroids, code_sz, nbits,
+                                  M_refine, nbits_refine)
+    elif mode == 'ivfpq-ondisk':
+        if use_gpu:
+            raise NotImplementedError(f'{mode} is only available in CPU.')
+        raise NotImplementedError(mode)
+    elif mode == 'hnsw':
+        if use_gpu:
+            raise NotImplementedError(f'{mode} is only available in CPU.')
+        else:
+            M = 16
+            index = faiss.IndexHNSWFlat(d, M)
+            index.hnsw.efConstruction = 80
+            index.verbose = True
+            index.hnsw.search_bounded_queue = True
+    else:
+        raise ValueError(mode.lower())
+
+    # From CPU index to GPU index
+    if use_gpu:
+        print('Copy index to \033[93mGPU\033[0m.')
+        index = faiss.index_cpu_to_gpu(GPU_RESOURCES, 0, index, GPU_OPTIONS)
+
+    # Train index
+    start_time = time.time()
+    if len(train_data) > max_nitem_train:
+        print('Training index using {:>3.2f} % of data...'.format(
+            100. * max_nitem_train / len(train_data)))
+        # shuffle and reduce training data
+        sel_tr_idx = np.random.permutation(len(train_data))
+        sel_tr_idx = sel_tr_idx[:int(max_nitem_train)]
+        index.train(train_data[sel_tr_idx,:])
+    else:
+        print('Training index...')
+        index.train(train_data) # Actually do nothing for {'l2', 'hnsw'}
+    print(f'Training completed in {time.time() - start_time:.2f}s')
+
+    index.nprobe = 20
+    return index
+
+
+def build_index(fingerprints, use_gpu=True):
+    """Build FAISS index for similarity search using IVFPQ."""
     if not FAISS_AVAILABLE:
         raise ImportError("faiss is required for indexing. Install with: pip install faiss-cpu")
     
-    d = fingerprints.shape[1]
-    index = faiss.IndexFlatL2(d)
-    
-    if use_gpu and faiss.get_num_gpus() > 0:
-        res = faiss.StandardGpuResources()
-        index = faiss.index_cpu_to_gpu(res, 0, index)
+    max_train = 1e7
+    n_centroids = 256
+    index = get_index('ivfpq', fingerprints, fingerprints.shape, use_gpu,
+                      max_train, n_centroids=n_centroids)
     
     index.add(fingerprints.astype('float32'))
     return index
+
+
+def save_index(index, path, use_gpu=False):
+    """
+    Save FAISS index to disk.
+    
+    Parameters
+    ----------
+    index : faiss.Index
+        The FAISS index to save
+    path : str
+        Path to save the index (e.g., 'fingerprints/grafp/index.faiss')
+    use_gpu : bool
+        If True, the index is on GPU and needs to be copied to CPU first
+    """
+    import os
+    os.makedirs(os.path.dirname(path) if os.path.dirname(path) else '.', exist_ok=True)
+    
+    # If index is on GPU, copy to CPU first
+    if use_gpu and hasattr(faiss, 'index_gpu_to_cpu'):
+        print(f'Copying index from GPU to CPU for saving...')
+        index_cpu = faiss.index_gpu_to_cpu(index)
+    else:
+        index_cpu = index
+    
+    faiss.write_index(index_cpu, path)
+    print(f'Index saved to: {path}')
+
+
+def load_index(path, use_gpu=False):
+    """
+    Load FAISS index from disk.
+    
+    Parameters
+    ----------
+    path : str
+        Path to the saved index file
+    use_gpu : bool
+        If True, copy the loaded index to GPU
+        
+    Returns
+    -------
+    index : faiss.Index
+        The loaded FAISS index
+    """
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Index file not found: {path}")
+    
+    print(f'Loading index from: {path}')
+    index = faiss.read_index(path)
+    
+    # Optionally copy to GPU
+    if use_gpu and hasattr(faiss, 'StandardGpuResources'):
+        print('Copying index to GPU...')
+        res = faiss.StandardGpuResources()
+        opts = faiss.GpuClonerOptions()
+        opts.useFloat16 = True
+        index = faiss.index_cpu_to_gpu(res, 0, index, opts)
+    
+    # Set nprobe for IVF-based indices
+    if hasattr(index, 'nprobe'):
+        index.nprobe = 20
+    
+    return index
+
+
+def get_or_build_index(fingerprints, index_path, use_gpu=True, force_rebuild=False):
+    """
+    Load index from disk if it exists, otherwise build and save it.
+    
+    Parameters
+    ----------
+    fingerprints : np.ndarray
+        Database fingerprints (only used if building)
+    index_path : str
+        Path to the index file
+    use_gpu : bool
+        Whether to use GPU for the index
+    force_rebuild : bool
+        If True, rebuild even if the file exists
+        
+    Returns
+    -------
+    index : faiss.Index
+        The FAISS index (loaded or newly built)
+    was_loaded : bool
+        True if the index was loaded from disk, False if built
+    """
+    import os
+    
+    if os.path.exists(index_path) and not force_rebuild:
+        print(f'Found existing index at {index_path}')
+        index = load_index(index_path, use_gpu=use_gpu)
+        return index, True
+    else:
+        print(f'Building new index...')
+        index = build_index(fingerprints, use_gpu=use_gpu)
+        save_index(index, index_path, use_gpu=use_gpu)
+        return index, False
 
 
 def search(index, query_fingerprints, k=10):

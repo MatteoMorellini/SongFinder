@@ -93,7 +93,10 @@ def main():
         print(f"Recognizing: {query_path.name}")
         print(f"Database: {len(db_meta)} fingerprints loaded")
 
-        index = build_index(db_fp, use_gpu=False)
+        # Load or build FAISS index with persistence
+        from approaches.grafp.inference import get_or_build_index
+        index_path = db_path / "index_ivfpq.faiss"
+        index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)
         
         timings = {}
 

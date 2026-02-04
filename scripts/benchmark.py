@@ -274,11 +274,13 @@ def benchmark_grafp(
     
     # Load database
     start = time.time()
-    from approaches.grafp.inference import load_fingerprints
+    from approaches.grafp.inference import load_fingerprints, get_or_build_index
     db_fp, db_meta = load_fingerprints(db_dir / "grafp")
     db_load_time = (time.time() - start) * 1000
 
-    index = build_index(db_fp, use_gpu=False)
+    # Load or build FAISS index with persistence
+    index_path = db_dir / "grafp" / "index_ivfpq.faiss"
+    index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)
     
     results = BenchmarkResults(
         approach="GraFP",
