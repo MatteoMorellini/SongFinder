@@ -1,3 +1,6 @@
+import os
+import torch
+import torchaudio
 import librosa
 import numpy as np
 import soundfile as sf
@@ -357,8 +360,10 @@ def extract_spectrogram(signal, sample_rate, strategy='optimized'):
 def extract_spectrogram_fast(signal, sample_rate):
     # signal: np.ndarray float32/float64, shape (n,) or (n, ch)
     x = torch.tensor(signal)
-    N_FFT = int(os.environ["SHAZAM_N_FFT"])
-    TARGET_SR = float(os.environ["SHAZAM_TARGET_SR"])
+    
+    from .config import N_FFT as DEFAULT_N_FFT, TARGET_SR as DEFAULT_TARGET_SR
+    n_fft = int(os.environ.get("SHAZAM_N_FFT", DEFAULT_N_FFT))
+    target_sr = float(os.environ.get("SHAZAM_TARGET_SR", DEFAULT_TARGET_SR))
 
     if x.ndim > 1:
         x = x.mean(dim=-1)  # mono (if shape is (n, ch); adapt if reversed)
@@ -366,12 +371,12 @@ def extract_spectrogram_fast(signal, sample_rate):
     x = x.to(torch.float32)
 
     # resample
-    x = torchaudio.functional.resample(x, orig_freq=sample_rate, new_freq=TARGET_SR)
+    x = torchaudio.functional.resample(x, orig_freq=sample_rate, new_freq=target_sr)
 
     # stft
-    window = torch.hann_window(N_FFT, device=x.device)
+    window = torch.hann_window(n_fft, device=x.device)
     stft = torch.stft(
-        x, n_fft=N_FFT, hop_length=HOP_LENGTH, window=window,
+        x, n_fft=n_fft, hop_length=HOP_LENGTH, window=window,
         return_complex=True, center=True, pad_mode="reflect"
     )
     spec = stft.abs().cpu().numpy()
