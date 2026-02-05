@@ -17,6 +17,10 @@ from .hashing import build_hashes, add_hashes_to_table
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3
 
+os.environ["SHAZAM_TARGET_SR"] = str(TARGET_SR)
+os.environ["SHAZAM_N_FFT"] = str(N_FFT)
+os.environ["SHAZAM_FAN_OUT"] = str(5)
+
 
 class Timer:
     """Context manager for timing code blocks with optional debug printing."""
@@ -279,6 +283,10 @@ class ShazamRecognizer(BaseSongRecognizer):
             
             if current_votes:
                 current_sorted = sorted(current_votes.items(), key=lambda x: x[1], reverse=True)[:10]
+                print(f"  Current query votes (top 10): {current_sorted}", flush=True)
+            else:
+                #print("  Current query votes: NONE", flush=True)
+                pass
             
             song_scores = current_votes.copy()
             
