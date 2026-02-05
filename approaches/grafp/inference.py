@@ -88,14 +88,32 @@ def extract_fingerprints(dataloader, model, transform, output_dir, batch_size=12
 
 
 def load_fingerprints(source_dir, name='db'):
-    """Load fingerprints from disk."""
+    """
+    Load fingerprints from disk.
+
+    Returns:
+        tuple: (data, metadata, metadata_table)
+            - data: fingerprints array
+            - metadata: array of filenames (one per segment)
+            - metadata_table: dict mapping filename -> {title, artist, album, filename}
+    """
+    import pickle
+
     shape = tuple(np.load(f'{source_dir}/{name}_shape.npy'))
     data = np.memmap(f'{source_dir}/{name}.mm', dtype='float32', mode='r', shape=shape)
-    
+
     meta_path = f'{source_dir}/{name}_metadata.npy'
     metadata = np.load(meta_path, allow_pickle=True) if os.path.exists(meta_path) else None
-    
-    return np.array(data), metadata
+
+    # Load metadata_table (rich metadata per song)
+    metadata_table_path = os.path.join(source_dir, 'metadata_table.pkl')
+    if os.path.exists(metadata_table_path):
+        with open(metadata_table_path, 'rb') as f:
+            metadata_table = pickle.load(f)
+    else:
+        metadata_table = {}
+
+    return np.array(data), metadata, metadata_table
 
 
 def get_index(index_type,

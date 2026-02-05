@@ -62,16 +62,17 @@ class ShazamRecognizer(BaseSongRecognizer):
                  max_query_hashes: int = 500):
         """
         Initialize the Shazam recognizer.
-        
+
         Args:
             db_path: Path to the fingerprint hash table database
-            songs_db_path: Path to the song name mapping database
+            songs_db_path: Path to the song name mapping database (now stores metadata)
             max_query_hashes: Maximum number of query hashes to use (for speed)
         """
         self.db_path = db_path
         self.songs_db_path = songs_db_path
         self.hash_table: Dict[int, list] = {}
-        self.song_table: Dict[str, int] = {}
+        self.song_table: Dict[str, int] = {}  # filename -> song_id (for indexing)
+        self.metadata_table: Dict[int, dict] = {}  # song_id -> metadata (title, artist, etc.)
         self.max_query_hashes = max_query_hashes
         self.freqs = np.fft.rfftfreq(N_FFT, d=1.0 / TARGET_SR)
         self.fan_out = 5
@@ -83,42 +84,56 @@ class ShazamRecognizer(BaseSongRecognizer):
     
     @property
     def num_indexed_songs(self) -> int:
-        return len(self.song_table)
-    
+        return len(self.metadata_table)
+
     def load(self, path: Optional[Path] = None) -> None:
         """Load databases from disk."""
         db_path = str(path / "fingerprints.db") if path else self.db_path
         songs_path = str(path / "songs.db") if path else self.songs_db_path
+        metadata_path = str(path / "metadata.db") if path else self.songs_db_path.replace("songs.db", "metadata.db")
+
         self.hash_table = load_db(db_path)
         self.song_table = load_db(songs_path)
-        
+        try:
+            self.metadata_table = load_db(metadata_path)
+        except:
+            # Fallback for old databases without metadata
+            self.metadata_table = {}
+
     def save(self, path: Optional[Path] = None) -> None:
         """Save databases to disk."""
         db_path = str(path / "fingerprints.db") if path else self.db_path
         songs_path = str(path / "songs.db") if path else self.songs_db_path
+        metadata_path = str(path / "metadata.db") if path else self.songs_db_path.replace("songs.db", "metadata.db")
+
         save_db(db_path, self.hash_table)
         save_db(songs_path, self.song_table)
+        save_db(metadata_path, self.metadata_table)
     
     def index_song(self, audio_path: Path) -> None:
         """Add a single song to the database."""
-        meta = MP3(audio_path, ID3=ID3)
-        song_name = ''
-        if "TIT2" in meta.tags:
-            song_name = str(meta.tags["TIT2"].text[0])
-        else:
-            song_name = audio_path.stem
+        from utils.metadata import extract_metadata
 
+        # Use filename as primary key
+        filename = audio_path.stem
 
-        if song_name in self.song_table:
+        if filename in self.song_table:
             return  # Already indexed
-            
+
+        # Extract metadata from tags (shared utility)
+        metadata = extract_metadata(audio_path)
+
+        # Fingerprint the audio
         signal, sr = load_audio(audio_path)
         spectrogram = extract_spectrogram(signal, sr)
         peaks = find_peaks(spectrogram, BANDS)
-        
-        song_id = get_song_id(self.song_table, song_name)
+
+        song_id = get_song_id(self.song_table, filename)
         fingerprints = build_hashes(peaks, self.freqs, song_id=song_id, fan_out=self.fan_out)
         add_hashes_to_table(self.hash_table, fingerprints)
+
+        # Save metadata
+        self.metadata_table[song_id] = metadata
     
     def index_folder(self, folder: Path, pattern: str = "*.flac") -> int:
         """Index all songs in a folder."""
@@ -336,13 +351,14 @@ class ShazamRecognizer(BaseSongRecognizer):
                 best_song_id = None
                 best_confidence = 0.0
         
-        # Get song name from ID
+        # Get song metadata from ID
         with timer.measure("Lookup"):
-            invert_song_table = {v: k for k, v in self.song_table.items()}
-            best_song_name = invert_song_table.get(best_song_id)
-        
+            best_song_metadata = self.metadata_table.get(best_song_id)
+            # For backward compatibility with benchmark, also return just filename
+            best_song_name = best_song_metadata['filename'] if best_song_metadata else None
+
         timer.log(f"Total recognition time: {timer.total:.4f}s")
-        
+
         metadata = {
             "num_query_hashes": len(fingerprints),
             "num_sampled_hashes": len(sampled_fingerprints),
@@ -356,6 +372,7 @@ class ShazamRecognizer(BaseSongRecognizer):
             "best_song_score": song_scores.get(best_song_id, 0),
             "timings": timer.timings,
             "total_time": timer.total,
+            "song_metadata": best_song_metadata,  # Include full metadata
         }
-        
+
         return best_song_name, float(best_confidence), metadata

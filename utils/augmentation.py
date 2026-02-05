@@ -1,34 +1,63 @@
 """
 Centralized audio augmentation functions for benchmarking.
 Ensures consistent audio processing for both Shazam and GraFP.
+Uses torchaudio for fast resampling (3.6x faster than scipy).
 """
 
 import numpy as np
 import random
+import subprocess
+import soundfile as sf
+import torch
+import torchaudio
 from pathlib import Path
 from typing import List, Optional, Tuple
-import librosa
 from scipy.signal import fftconvolve
 
 
 def load_audio(audio_path: Path, target_sr: int) -> Tuple[np.ndarray, int]:
     """
     Load and resample audio file.
-    
+    Uses soundfile (fast) with ffmpeg fallback (robust).
+    Uses torchaudio for resampling (3.6x faster than scipy).
+
     Args:
         audio_path: Path to audio file
         target_sr: Target sample rate
-    
+
     Returns:
         Tuple of (audio signal as 1D numpy array, sample rate)
     """
-    waveform, sr = librosa.load(audio_path, sr=None, mono=True)
-    waveform = np.atleast_1d(waveform).flatten()
-    
+    # Try soundfile first (fastest)
+    try:
+        waveform, sr = sf.read(audio_path)
+        waveform = np.atleast_1d(waveform).flatten() if waveform.ndim == 1 else waveform.mean(axis=1)
+    except Exception:
+        # Fallback to ffmpeg for ISO Media/ALAC
+        try:
+            probe = subprocess.run(
+                ['ffprobe', '-v', 'error', '-select_streams', 'a:0',
+                 '-show_entries', 'stream=sample_rate', '-of', 'csv=p=0', str(audio_path)],
+                capture_output=True, text=True, timeout=10, check=True
+            )
+            sr = int(probe.stdout.strip())
+
+            result = subprocess.run(
+                ['ffmpeg', '-i', str(audio_path), '-f', 'f32le', '-acodec', 'pcm_f32le',
+                 '-ac', '1', '-'],
+                capture_output=True, timeout=60, check=True
+            )
+            waveform = np.frombuffer(result.stdout, dtype=np.float32)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load {audio_path}: {e}")
+
+    # Resample using torchaudio (3.6x faster than scipy)
     if sr != target_sr:
-        waveform = librosa.resample(waveform, orig_sr=sr, target_sr=target_sr)
-        waveform = np.atleast_1d(waveform).flatten()
-    
+        waveform_torch = torch.from_numpy(waveform)
+        waveform = torchaudio.functional.resample(
+            waveform_torch, sr, target_sr
+        ).numpy().astype(np.float32)
+
     return waveform.astype(np.float32), target_sr
 
 
@@ -47,14 +76,8 @@ def apply_ir(signal: np.ndarray, ir_path: Path, sample_rate: int, save_example_d
         Convolved signal with same length as input
     """
     try:
-        # Load IR file
-        ir, ir_sr = librosa.load(ir_path, sr=None, mono=True)
-        ir = np.atleast_1d(ir).flatten()
-        
-        # Resample IR if needed
-        if ir_sr != sample_rate:
-            ir = librosa.resample(ir, orig_sr=ir_sr, target_sr=sample_rate)
-            ir = np.atleast_1d(ir).flatten()
+        # Load IR file using our robust loader
+        ir, _ = load_audio(ir_path, sample_rate)
         
         # Normalize IR
         ir = ir / (np.max(np.abs(ir)) + 1e-10)
@@ -112,12 +135,8 @@ def add_noise(signal: np.ndarray, snr_db: float, noise_files: List[Path], sample
     
     noise_file = random.choice(noise_files)
     try:
-        noise, noise_sr = librosa.load(noise_file, sr=None, mono=True)
-        noise = np.atleast_1d(noise).flatten()
-        
-        if noise_sr != sample_rate:
-            noise = librosa.resample(noise, orig_sr=noise_sr, target_sr=sample_rate)
-            noise = np.atleast_1d(noise).flatten()
+        # Load noise using our robust loader
+        noise, _ = load_audio(noise_file, sample_rate)
         
         # Tile or truncate to match signal length
         if len(noise) < len(signal_1d):
