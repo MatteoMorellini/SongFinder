@@ -9,8 +9,43 @@ from pathlib import Path
 from .config import HOP_LENGTH
 
 def load_audio(path):
-    signal, sr = sf.read(path)
-    return np.asarray(signal), sr
+    """
+    Load audio file with fallback for non-standard formats (ISO Media/ALAC).
+    Uses soundfile first (fast) then ffmpeg (robust).
+    """
+    import subprocess
+
+    # Try soundfile first (fastest for standard formats)
+    try:
+        signal, sr = sf.read(path)
+        # Convert to mono if stereo
+        if signal.ndim > 1:
+            signal = signal.mean(axis=1)
+        return signal.astype(np.float32), sr
+    except Exception:
+        pass
+
+    # Fallback to ffmpeg for non-standard formats (ISO Media/ALAC)
+    try:
+        # Get sample rate with ffprobe
+        probe = subprocess.run(
+            ['ffprobe', '-v', 'error', '-select_streams', 'a:0',
+             '-show_entries', 'stream=sample_rate', '-of', 'csv=p=0', str(path)],
+            capture_output=True, text=True, timeout=10, check=True
+        )
+        sr = int(probe.stdout.strip())
+
+        # Decode to PCM with ffmpeg
+        result = subprocess.run(
+            ['ffmpeg', '-i', str(path), '-f', 'f32le', '-acodec', 'pcm_f32le',
+             '-ac', '1', '-'],
+            capture_output=True, timeout=60, check=True
+        )
+
+        signal = np.frombuffer(result.stdout, dtype=np.float32)
+        return signal, sr
+    except Exception as e:
+        raise RuntimeError(f"Failed to load {path}: {e}")
 
 def cut_audio(signal, sample_rate, clip_length_sec):
     np.random.seed(42)
@@ -192,22 +227,29 @@ def extract_spectrogram_low_res(signal, sample_rate, N_FFT, TARGET_SR, n_fft_ove
 def extract_spectrogram_optimized(signal, sample_rate, N_FFT, TARGET_SR):
     """
     Combines multiple optimizations for best performance.
-    
+
     - Uses scipy.signal.stft (faster)
     - Skips unnecessary resampling
+    - Uses scipy.signal.resample_poly instead of librosa (avoids soxr)
     - Uses float32 instead of float64 (less memory, faster)
-    
+
     Expected speedup: 2-3x
     """
+    # Convert to mono using numpy (avoid librosa.to_mono)
     if signal.ndim > 1:
-        signal = librosa.to_mono(signal.T)
-    
+        signal = signal.mean(axis=-1 if signal.shape[-1] <= 2 else 0)
+
     # Convert to float32 for faster processing
     signal = signal.astype(np.float32)
-    
-    # Only resample if needed
+
+    # Only resample if needed - use scipy instead of librosa
     if sample_rate != TARGET_SR:
-        signal = librosa.resample(signal, orig_sr=sample_rate, target_sr=TARGET_SR)
+        from scipy.signal import resample_poly
+        # Calculate resampling factors
+        gcd = np.gcd(int(sample_rate), int(TARGET_SR))
+        up = int(TARGET_SR) // gcd
+        down = int(sample_rate) // gcd
+        signal = resample_poly(signal, up, down).astype(np.float32)
     
     # Use scipy's STFT (often faster)
     f, t, stft = scipy.signal.stft(

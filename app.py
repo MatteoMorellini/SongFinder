@@ -174,7 +174,7 @@ db_path = Path(DB_PATH_GRAFP) if DB_PATH_GRAFP else Path("fingerprints/grafp")
 log_detail("Database path", str(db_path))
 log_detail("Checkpoint", str(CHECKPOINT))
 try:
-    db_fp, db_meta = load_fingerprints(db_path)
+    db_fp, db_meta, db_metadata_table = load_fingerprints(db_path)
     # Load or build FAISS index with persistence
     index_path = db_path / "index_ivfpq.faiss"
     faiss_index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)

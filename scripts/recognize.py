@@ -85,7 +85,7 @@ def main():
         # Load database fingerprints
         db_path = Path(args.db_path) if args.db_path else Path("fingerprints/grafp")
         try:
-            db_fp, db_meta = load_fingerprints(db_path)
+            db_fp, db_meta, db_metadata_table = load_fingerprints(db_path)
         except Exception as e:
             print(f"Error loading database from {db_path}: {e}")
             sys.exit(1)

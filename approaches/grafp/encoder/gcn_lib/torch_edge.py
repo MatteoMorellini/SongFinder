@@ -2,8 +2,7 @@ import math
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torchmetrics.functional import pairwise_cosine_similarity
-import  numpy as np
+import numpy as np
 def pairwise_distance(x):
     """
     Compute pairwise distance of a point cloud.
