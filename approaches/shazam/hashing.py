@@ -85,19 +85,26 @@ def build_hashes_old(peaks, freqs, song_id=0, fan_out=5,
 
 def add_hashes_to_table(table, fingerprints):
     """
-    table: existing dict[uint32 -> list[(song_id, t_anchor)]]
+    table: existing dict[uint32 -> np.ndarray of shape (N, 2) with dtype uint32]
+           Each row is [song_id, t_anchor]
     fingerprints: iterable of (hash32, song_id, t_anchor)
                   where hash32 is np.uint32
-    returns: dict[uint32 -> list[(song_id, t_anchor)]]
     """
-
+    # Group fingerprints by hash first for efficient numpy array building
+    from collections import defaultdict
+    new_entries = defaultdict(list)
+    
     for h, song_id, t_anchor in fingerprints:
         h = np.uint32(h)
-        
+        new_entries[h].append((song_id, t_anchor))
+    
+    # Merge into table
+    for h, entries in new_entries.items():
+        new_arr = np.array(entries, dtype=np.uint32)
         if h not in table:
-            table[h] = [(song_id, t_anchor)]
+            table[h] = new_arr
         else:
-            table[h].append((song_id, t_anchor))
+            table[h] = np.concatenate([table[h], new_arr])
 
 
 def build_hashes(peaks, freqs, song_id=0, fan_out=5,

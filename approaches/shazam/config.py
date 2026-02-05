@@ -17,6 +17,6 @@ BANDS = [
 ]
 
 FUZ_FACTOR = 2  # absorb small variations in frequency / time: 43 → 42, 21 → 20, etc.
-TARGET_SR = 11025
+TARGET_SR = 16000
 N_FFT = 2048
 HOP_LENGTH = 368

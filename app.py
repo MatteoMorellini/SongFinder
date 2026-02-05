@@ -410,6 +410,7 @@ async def recognize(
 
         # Parse cumulative_votes from JSON string if provided
         parsed_cumulative_votes = None
+        print('CUMULATIVE VOTES:', cumulative_votes)
         if cumulative_votes and method.lower().strip() == "shazam":
             try:
                 import json
