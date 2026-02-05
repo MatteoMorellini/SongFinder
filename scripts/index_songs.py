@@ -19,12 +19,35 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray):
+def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray, new_metadata_dict: dict = None):
+    """
+    Append new fingerprints to GraFP database.
+
+    Args:
+        output_dir: Output directory for database files
+        new_fp: New fingerprints array
+        new_meta: New metadata array (filename for each segment)
+        new_metadata_dict: Dictionary mapping filename -> metadata dict (title, artist, album)
+    """
+    import pickle
+
     db_path = output_dir / "db.mm"
     shape_path = output_dir / "db_shape.npy"
     meta_path = output_dir / "db_metadata.npy"
+    metadata_table_path = output_dir / "metadata_table.pkl"
 
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load or initialize metadata_table
+    if metadata_table_path.exists():
+        with open(metadata_table_path, 'rb') as f:
+            metadata_table = pickle.load(f)
+    else:
+        metadata_table = {}
+
+    # Update metadata_table with new entries
+    if new_metadata_dict:
+        metadata_table.update(new_metadata_dict)
 
     if db_path.exists() and shape_path.exists() and meta_path.exists():
         old_shape = tuple(np.load(shape_path))
@@ -51,11 +74,17 @@ def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray):
         print(f"new entries: {len(new_meta)}")
         print(f"updated meta length: {len(combined_meta)}")
 
-        # rewrite db.mm with combined content
+        # CRITICAL FIX: Copy old data to memory BEFORE truncating file
+        # mode='w+' truncates the file, corrupting old_db which points to same file
+        old_data_copy = np.array(old_db)  # Copy to RAM
+        del old_db  # Close old memmap
+
+        # Now safe to create new memmap (file will be truncated)
         new_db = np.memmap(db_path, dtype="float32", mode="w+", shape=combined_shape)
-        new_db[:old_shape[0]] = old_db[:]
+        new_db[:old_shape[0]] = old_data_copy
         new_db[old_shape[0]:] = new_fp
         new_db.flush()
+        del new_db  # Ensure flush completes
 
         np.save(shape_path, np.array(combined_shape))
         np.save(meta_path, combined_meta)
@@ -65,8 +94,13 @@ def append_grafp_db(output_dir: Path, new_fp: np.ndarray, new_meta: np.ndarray):
         new_db = np.memmap(db_path, dtype="float32", mode="w+", shape=new_fp.shape)
         new_db[:] = new_fp
         new_db.flush()
+        del new_db  # Ensure flush completes
         np.save(shape_path, np.array(new_fp.shape))
         np.save(meta_path, new_meta)
+
+    # Save metadata_table
+    with open(metadata_table_path, 'wb') as f:
+        pickle.dump(metadata_table, f)
 
 
 def index_shazam(folder: Path, output_dir: Path, pattern: str):
@@ -145,12 +179,12 @@ def chunk_audio(waveform: np.ndarray, sr: int, chunk_duration: float,
     return chunks
 
 
-def index_grafp(folder: Path, output_dir: Path, checkpoint: str, 
+def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
                 config: str, device: str, pattern: str,
                 chunk_duration: float = 60.0, chunk_overlap: float = 15.0):
     """
     Index songs using GraFP approach with chunking.
-    
+
     Args:
         chunk_duration: Duration of each chunk in seconds (default: 60)
         chunk_overlap: Overlap between chunks in seconds (default: 30)
@@ -158,86 +192,108 @@ def index_grafp(folder: Path, output_dir: Path, checkpoint: str,
     import torch
     import torchaudio
     import numpy as np
+    import pickle
     from tqdm import tqdm
     from approaches.grafp import load_config, load_model
     from approaches.grafp.modules.transformations import AudioTransform
-    
+    from utils.augmentation import load_audio
+    from utils.metadata import extract_metadata
+
     print("\n=== GraFP Indexing ===")
     print(f"Chunk settings: {chunk_duration}s duration, {chunk_overlap}s overlap")
     print(f"Effective hop: {chunk_duration - chunk_overlap}s")
-    
+
     cfg = load_config(config)
     model = load_model(cfg, checkpoint)
     transform = AudioTransform(cfg).to(device)
-    
+
+    # Load existing metadata_table to check for duplicates
+    metadata_table_path = output_dir / "metadata_table.pkl"
+    if metadata_table_path.exists():
+        with open(metadata_table_path, 'rb') as f:
+            existing_metadata = pickle.load(f)
+        print(f"Loaded existing metadata: {len(existing_metadata)} songs indexed")
+    else:
+        existing_metadata = {}
+
     audio_files = list(folder.rglob(pattern))
     if not audio_files:
         audio_files = list(folder.rglob("*.mp3"))
-    
+
     print(f"Found {len(audio_files)} audio files")
-    
+
     fingerprints = []
     metadata = []
-    
-    import soundfile as sf
-    
+    new_metadata_dict = {}  # filename -> metadata dict
+
     model.eval()
     total_chunks = 0
-    
+    skipped = 0
+
     for f in tqdm(audio_files, desc="Processing songs"):
+        filename = f.stem
+
+        # Check if already indexed (deduplication)
+        if filename in existing_metadata:
+            skipped += 1
+            continue
+        # Extract metadata from tags (once per song)
+        song_metadata = extract_metadata(f)
+        new_metadata_dict[filename] = song_metadata
+
         try:
-            # Load audio file
-            signal, sr = sf.read(f)
-            waveform_np = signal if signal.ndim == 1 else signal.mean(axis=1)
-            
-            # Resample if needed
-            if sr != cfg['fs']:
-                waveform_torch = torch.from_numpy(waveform_np).float()
-                waveform_torch = torchaudio.transforms.Resample(sr, cfg['fs'])(waveform_torch)
-                waveform_np = waveform_torch.numpy()
-                sr = cfg['fs']
-            
+            # Load and resample audio file (handles ISO Media/ALAC, avoids soxr)
+            waveform_np, sr = load_audio(f, cfg['fs'])
+
             # Split into chunks
             chunks = chunk_audio(waveform_np, sr, chunk_duration, chunk_overlap)
-            
+
             if not chunks:
                 print(f"Warning: No valid chunks for {f.name}")
                 continue
-            
+
             # Process each chunk
             for chunk_idx, (chunk_waveform, start_time) in enumerate(chunks):
                 try:
                     waveform = torch.from_numpy(chunk_waveform).float()
                     segments = transform(waveform.unsqueeze(0).to(device))
-                    
+
                     with torch.no_grad():
                         _, _, z, _ = model(segments, segments)
-                    
+
                     fingerprints.append(z.cpu().numpy())
-                    
-                    # Store metadata - just the song name for all segments
+
+                    # Store filename for all segments (for FAISS matching)
                     for _ in range(z.shape[0]):
-                        metadata.append(f.stem)
-                    
+                        metadata.append(filename)
+
                     total_chunks += 1
-                    
+
                 except Exception as e:
                     print(f"Error processing chunk {chunk_idx} of {f.name}: {e}")
                     continue
-                
+
         except Exception as e:
             print(f"Error loading {f.name}: {e}")
             continue
     
+    if skipped > 0:
+        print(f"Skipped {skipped} already indexed songs")
+
     if fingerprints:
         fp_array = np.concatenate(fingerprints).astype('float32')
         new_meta = np.array(metadata)
-        append_grafp_db(output_dir, fp_array, new_meta)
+        append_grafp_db(output_dir, fp_array, new_meta, new_metadata_dict)
 
-        print(f"✓ Saved {len(audio_files)} songs ({total_chunks} chunks, {fp_array.shape[0]} segments) to {output_dir}")
-        print(f"  Average chunks per song: {total_chunks / len(audio_files):.1f}")
-        return len(audio_files)
-    
+        new_songs_count = len(new_metadata_dict)
+        print(f"✓ Saved {new_songs_count} new songs ({total_chunks} chunks, {fp_array.shape[0]} segments) to {output_dir}")
+        if new_songs_count > 0:
+            print(f"  Average chunks per song: {total_chunks / new_songs_count:.1f}")
+        return new_songs_count
+    elif skipped > 0:
+        print(f"✓ No new songs to index (all {skipped} songs already indexed)")
+        return 0
+
     return 0
 
 
