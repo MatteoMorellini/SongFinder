@@ -45,15 +45,16 @@ class BenchmarkResults:
     n_queries: int
     db_load_time_ms: float
     conditions: Dict[str, dict] = field(default_factory=dict)
+    timings: Dict[str, Dict[str, float]] = field(default_factory=dict)  # Average timings per condition
 
 
 # Test conditions to evaluate
 TEST_CONDITIONS = [
-    # TestCondition("clean_10s", clip_length_sec=10.0),
-    # TestCondition("clean_5s", clip_length_sec=5.0),
-    # TestCondition("clean_3s", clip_length_sec=3.0),
-    # TestCondition("snr_10db", clip_length_sec=10.0, snr_db=10.0),
-    # TestCondition("snr_5db", clip_length_sec=10.0, snr_db=5.0),
+    TestCondition("clean_10s", clip_length_sec=10.0),
+    TestCondition("clean_5s", clip_length_sec=5.0),
+    TestCondition("clean_3s", clip_length_sec=3.0),
+    TestCondition("snr_10db", clip_length_sec=10.0, snr_db=10.0),
+    TestCondition("snr_5db", clip_length_sec=10.0, snr_db=5.0),
     TestCondition("snr_0db", clip_length_sec=10.0, snr_db=0.0),
     TestCondition("ir_10s", clip_length_sec=10.0, use_ir=True),
     TestCondition("ir_snr_5db", clip_length_sec=10.0, snr_db=5.0, use_ir=True),
@@ -83,39 +84,46 @@ def benchmark_shazam(
     noise_files: List[Path],
     ir_files: List[Path],
     conditions: List[TestCondition],
-    target_sr: int = 8000,
+    target_sr: int = 16000,
     example_dir: Optional[Path] = None
 ) -> BenchmarkResults:
     """Benchmark Shazam with on-the-fly augmentation using deterministic seeds."""
     from approaches.shazam import ShazamRecognizer
-    
+
     print("\n=== Shazam Benchmark ===")
-    
+    print(f"Target Sample Rate: {target_sr} Hz")
+
     start = time.time()
     recognizer = ShazamRecognizer()
     recognizer.load(db_dir / "shazam")
     db_load_time = (time.time() - start) * 1000
-    
+
     results = BenchmarkResults(
         approach="Shazam",
         n_db_songs=recognizer.num_indexed_songs,
         n_queries=len(test_files),
         db_load_time_ms=db_load_time
     )
-    
+
     print(f"Loaded {results.n_db_songs} songs in {db_load_time:.1f}ms")
-    
+
     for cond_idx, condition in enumerate(conditions):
         correct = 0
         total = 0
         query_times = []
-        
+        errors = []  # Track errors: {expected, predicted, score}
+        timings_per_step = {}  # Will be populated dynamically
+
         for file_idx, test_file in enumerate(test_files):
             expected = test_file.stem
             # Deterministic seed based on condition and file index
             seed = cond_idx * 10000 + file_idx
-            
+
             try:
+                t_start_total = time.perf_counter()
+
+                # Load and augment audio (like GraFP)
+                t0 = time.perf_counter()
                 query_audio = create_augmented_query(
                     audio_path=test_file,
                     clip_length_sec=condition.clip_length_sec,
@@ -128,35 +136,78 @@ def benchmark_shazam(
                     save_example_dir=example_dir,
                     example_prefix=f"shazam_{condition.name}"
                 )
-                
-                start = time.time()
-                song, score, _ = recognizer.recognize(
+                t_load = time.perf_counter() - t0
+
+                # Recognition (includes all internal steps)
+                song, score, metadata = recognizer.recognize(
                     signal=query_audio,
-                    sample_rate=target_sr
+                    sample_rate=target_sr,
+                    debug=False
                 )
-                query_time = (time.time() - start) * 1000
-                query_times.append(query_time)
-                
+
+                t_total = time.perf_counter() - t_start_total
+
+                # Collect all timings (load_audio + internal recognizer timings)
+                combined_timings = {"load_audio": t_load}
+                if 'timings' in metadata:
+                    combined_timings.update(metadata['timings'])
+                combined_timings["total"] = t_total
+
+                # Store timings per step
+                for key, value in combined_timings.items():
+                    if key not in timings_per_step:
+                        timings_per_step[key] = []
+                    timings_per_step[key].append(value)
+
+                query_times.append(t_total * 1000)  # Convert to ms
+
                 if song == expected:
                     correct += 1
+                else:
+                    # Record error
+                    errors.append({
+                        "file": test_file.name,
+                        "expected": expected,
+                        "predicted": song if song else "None",
+                        "score": float(score)
+                    })
                 total += 1
-                
+
             except Exception as e:
                 print(f"  Error {test_file.name}: {e}")
+                errors.append({
+                    "file": test_file.name,
+                    "expected": expected,
+                    "predicted": "ERROR",
+                    "error_message": str(e)
+                })
                 total += 1
-        
+
         accuracy = correct / total * 100 if total > 0 else 0
         avg_time = np.mean(query_times) if query_times else 0
-        
+
+        # Calculate average timings per step
+        avg_timings = {}
+        for key in timings_per_step:
+            values = timings_per_step[key]
+            avg_timings[key] = float(np.mean(values))
+
         results.conditions[condition.name] = {
             "accuracy": accuracy,
             "avg_query_time_ms": avg_time,
             "correct": correct,
-            "total": total
+            "total": total,
+            "errors": errors,  # List of all misclassifications
+            "avg_timings_per_step": avg_timings  # Average time per processing step
         }
-        
+
+        if condition.name not in results.timings:
+            results.timings[condition.name] = avg_timings
+
         print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), {avg_time:.1f}ms/query")
-    
+        if errors:
+            print(f"    Errors: {len(errors)}")
+
     return results
 
 
@@ -175,44 +226,58 @@ def benchmark_grafp(
     from approaches.grafp import load_config, load_model
     from approaches.grafp.modules.transformations import AudioTransform
     from approaches.grafp.inference import recognize
-    
+
     print("\n=== GraFP Benchmark ===")
-    
+
     cfg = load_config(config_path)
     model = load_model(cfg, checkpoint_path)
     transform = AudioTransform(cfg).to(device)
     target_sr = cfg['fs']  # Use GraFP's native sample rate
-    
+
+    print(f"Target Sample Rate: {target_sr} Hz")
+
     start = time.time()
     from approaches.grafp.inference import load_fingerprints, get_or_build_index
-    db_fp, db_meta = load_fingerprints(db_dir / "grafp")
+    db_fp, db_meta, db_metadata_table = load_fingerprints(db_dir / "grafp")
     db_load_time = (time.time() - start) * 1000
 
     index_path = db_dir / "grafp" / "index_ivfpq.faiss"
     index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)
-    
+
     results = BenchmarkResults(
         approach="GraFP",
         n_db_songs=len(set(db_meta)),
         n_queries=len(test_files),
         db_load_time_ms=db_load_time
     )
-    
+
     print(f"Loaded {db_fp.shape[0]} fingerprints ({results.n_db_songs} songs) in {db_load_time:.1f}ms")
 
     model.eval()
-    
+
     for cond_idx, condition in enumerate(conditions):
         correct = 0
         total = 0
         query_times = []
-        
+        errors = []  # Track errors: {expected, predicted, score}
+        timings_per_step = {
+            "load_audio": [],
+            "transform": [],
+            "model_inference": [],
+            "search": [],
+            "total": []
+        }
+
         for file_idx, test_file in enumerate(test_files):
             expected = test_file.stem
             # Same deterministic seed as Shazam for identical augmentation choices
             seed = cond_idx * 10000 + file_idx
-            
+
             try:
+                t_start_total = time.perf_counter()
+
+                # Load and augment audio
+                t0 = time.perf_counter()
                 query_audio = create_augmented_query(
                     audio_path=test_file,
                     clip_length_sec=condition.clip_length_sec,
@@ -225,40 +290,85 @@ def benchmark_grafp(
                     save_example_dir=example_dir,
                     example_prefix=f"grafp_{condition.name}"
                 )
-                
-                start = time.time()
-                
+                t_load = time.perf_counter() - t0
+
+                # Transform audio to spectrogram segments
+                t0 = time.perf_counter()
                 waveform = torch.from_numpy(query_audio).float()
                 segments = transform(waveform.unsqueeze(0).to(device))
-                
+                t_transform = time.perf_counter() - t0
+
+                # Model inference
+                t0 = time.perf_counter()
                 with torch.no_grad():
                     _, _, query_fp, _ = model(segments, segments)
-                
-                song, votes = recognize(query_fp.cpu().numpy(), db_fp, db_meta, index)
-                
-                query_time = (time.time() - start) * 1000
-                query_times.append(query_time)
-                
+                t_inference = time.perf_counter() - t0
+
+                # Search in database
+                t0 = time.perf_counter()
+                song, score = recognize(query_fp.cpu().numpy(), db_fp, db_meta, index)
+                t_search = time.perf_counter() - t0
+
+                t_total = time.perf_counter() - t_start_total
+
+                # Store timings
+                timings_per_step["load_audio"].append(t_load)
+                timings_per_step["transform"].append(t_transform)
+                timings_per_step["model_inference"].append(t_inference)
+                timings_per_step["search"].append(t_search)
+                timings_per_step["total"].append(t_total)
+
+                query_times.append(t_total * 1000)  # Convert to ms
+
                 if song == expected:
                     correct += 1
+                else:
+                    # Record error
+                    errors.append({
+                        "file": test_file.name,
+                        "expected": expected,
+                        "predicted": song if song else "None",
+                        "score": float(score)
+                    })
                 total += 1
-                
+
             except Exception as e:
                 print(f"    Error {test_file.name}: {e}")
+                import traceback
+                traceback.print_exc()
+                errors.append({
+                    "file": test_file.name,
+                    "expected": expected,
+                    "predicted": "ERROR",
+                    "error_message": str(e)
+                })
                 total += 1
-        
+
         accuracy = correct / total * 100 if total > 0 else 0
         avg_time = np.mean(query_times) if query_times else 0
-        
+
+        # Calculate average timings per step
+        avg_timings = {}
+        for step, times in timings_per_step.items():
+            if times:
+                avg_timings[step] = float(np.mean(times))
+
         results.conditions[condition.name] = {
             "accuracy": accuracy,
             "avg_query_time_ms": avg_time,
             "correct": correct,
-            "total": total
+            "total": total,
+            "errors": errors,  # List of all misclassifications
+            "avg_timings_per_step": avg_timings  # Average time per processing step
         }
-        
+
+        if condition.name not in results.timings:
+            results.timings[condition.name] = avg_timings
+
         print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), {avg_time:.1f}ms/query")
-    
+        if errors:
+            print(f"    Errors: {len(errors)}")
+
     return results
 
 
@@ -267,14 +377,14 @@ def print_comparison(shazam: BenchmarkResults, grafp: BenchmarkResults):
     print("\n" + "=" * 80)
     print("COMPARISON: Shazam vs GraFP")
     print("=" * 80)
-    
+
     print(f"\n{'Metric':<25} {'Shazam':>15} {'GraFP':>15} {'Winner':>15}")
     print("-" * 80)
-    
+
     print(f"{'DB Songs':<25} {shazam.n_db_songs:>15} {grafp.n_db_songs:>15} {'-':>15}")
     print(f"{'DB Load Time (ms)':<25} {shazam.db_load_time_ms:>15.1f} {grafp.db_load_time_ms:>15.1f} "
           f"{'Shazam' if shazam.db_load_time_ms < grafp.db_load_time_ms else 'GraFP':>15}")
-    
+
     print("\nAccuracy by condition:")
     for cond_name in shazam.conditions:
         if cond_name in grafp.conditions:
@@ -282,11 +392,35 @@ def print_comparison(shazam: BenchmarkResults, grafp: BenchmarkResults):
             g_acc = grafp.conditions[cond_name]["accuracy"]
             s_time = shazam.conditions[cond_name]["avg_query_time_ms"]
             g_time = grafp.conditions[cond_name]["avg_query_time_ms"]
-            
+            s_errors = len(shazam.conditions[cond_name].get("errors", []))
+            g_errors = len(grafp.conditions[cond_name].get("errors", []))
+
             print(f"\n  {cond_name}:")
             print(f"    {'Accuracy':<20} {s_acc:>12.1f}% {g_acc:>12.1f}% {'Shazam' if s_acc > g_acc else 'GraFP':>15}")
             print(f"    {'Query Time (ms)':<20} {s_time:>12.1f} {g_time:>12.1f} {'Shazam' if s_time < g_time else 'GraFP':>15}")
-    
+            print(f"    {'Errors':<20} {s_errors:>12} {g_errors:>12} {'-':>15}")
+
+    # Print detailed timing breakdown
+    print("\n" + "=" * 80)
+    print("DETAILED TIMING BREAKDOWN (average per query)")
+    print("=" * 80)
+
+    for cond_name in shazam.conditions:
+        if cond_name in grafp.conditions and cond_name in shazam.timings and cond_name in grafp.timings:
+            print(f"\n  {cond_name}:")
+            s_timings = shazam.timings[cond_name]
+            g_timings = grafp.timings[cond_name]
+
+            # Get all unique timing keys
+            all_keys = set(s_timings.keys()) | set(g_timings.keys())
+
+            print(f"    {'Step':<30} {'Shazam (s)':>15} {'GraFP (s)':>15}")
+            print(f"    {'-'*60}")
+            for key in sorted(all_keys):
+                s_val = s_timings.get(key, 0)
+                g_val = g_timings.get(key, 0)
+                print(f"    {key:<30} {s_val:>15.4f} {g_val:>15.4f}")
+
     print("\n" + "=" * 80)
 
 
@@ -344,12 +478,12 @@ def main():
     example_dir.mkdir(parents=True, exist_ok=True)
     
     results = {}
-    
-    # Shazam (uses 8000 Hz)
+
+    # Shazam (uses 16000 Hz to match GraFP)
     if not args.grafp_only and (db_dir / "shazam").exists():
         shazam_results = benchmark_shazam(
             db_dir, test_files, noise_files, ir_files, TEST_CONDITIONS,
-            target_sr=8000, example_dir=example_dir
+            target_sr=16000, example_dir=example_dir
         )
         results["shazam"] = asdict(shazam_results)
     
