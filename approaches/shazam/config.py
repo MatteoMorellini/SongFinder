@@ -1,12 +1,5 @@
-# ---------- CONFIG ---------- #
-
-DB_PATH = "fingerprints/fingerprints.db"
-SONGS_DB_PATH = "fingerprints/songs.db"
-PLOT_SPECTROGRAM = False
-PLOT_MATCHING = True
-
-# Define frequency bands (in terms of frequency bin indices)
-# n_fft = 2048 -> freq bins = 1025 (0 to 1024) but we will limit to ~5kHz
+# Frequency bands (in FFT bin indices)
+# n_fft=2048, sr=16kHz -> 1025 bins, limited to ~5kHz
 BANDS = [
     (1, 10),      # very low
     (11, 20),     # low
@@ -16,7 +9,7 @@ BANDS = [
     (161, 511)    # high
 ]
 
-FUZ_FACTOR = 2  # absorb small variations in frequency / time: 43 → 42, 21 → 20, etc.
+FUZ_FACTOR = 2
 TARGET_SR = 16000
 N_FFT = 2048
 HOP_LENGTH = 368

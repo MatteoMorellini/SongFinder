@@ -2,10 +2,6 @@
 """
 Benchmark script: compare Shazam vs GraFP inference performance.
 
-Prerequisites:
-    1. Run preprocess.py first to generate fingerprints
-    2. Have audio files for query testing
-
 Usage:
     python scripts/benchmark.py --db_dir ./fingerprints/ \
                                 --test_dir ~/datasets/fma_small \
@@ -111,6 +107,7 @@ def benchmark_shazam(
         correct = 0
         total = 0
         query_times = []
+        all_scores = []  # Track all confidence scores for average
         errors = []  # Track errors: {expected, predicted, score}
         timings_per_step = {}  # Will be populated dynamically
 
@@ -160,6 +157,7 @@ def benchmark_shazam(
                     timings_per_step[key].append(value)
 
                 query_times.append(t_total * 1000)  # Convert to ms
+                all_scores.append(float(score))  # Track confidence score
 
                 if song == expected:
                     correct += 1
@@ -185,6 +183,7 @@ def benchmark_shazam(
 
         accuracy = correct / total * 100 if total > 0 else 0
         avg_time = np.mean(query_times) if query_times else 0
+        avg_confidence = np.mean(all_scores) if all_scores else 0
 
         # Calculate average timings per step
         avg_timings = {}
@@ -194,6 +193,7 @@ def benchmark_shazam(
 
         results.conditions[condition.name] = {
             "accuracy": accuracy,
+            "avg_confidence": avg_confidence,
             "avg_query_time_ms": avg_time,
             "correct": correct,
             "total": total,
@@ -204,7 +204,7 @@ def benchmark_shazam(
         if condition.name not in results.timings:
             results.timings[condition.name] = avg_timings
 
-        print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), {avg_time:.1f}ms/query")
+        print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), conf={avg_confidence:.3f}, {avg_time:.1f}ms/query")
         if errors:
             print(f"    Errors: {len(errors)}")
 
@@ -259,6 +259,7 @@ def benchmark_grafp(
         correct = 0
         total = 0
         query_times = []
+        all_scores = []  # Track all confidence scores for average
         errors = []  # Track errors: {expected, predicted, score}
         timings_per_step = {
             "load_audio": [],
@@ -319,6 +320,7 @@ def benchmark_grafp(
                 timings_per_step["total"].append(t_total)
 
                 query_times.append(t_total * 1000)  # Convert to ms
+                all_scores.append(float(score))  # Track confidence score
 
                 if song == expected:
                     correct += 1
@@ -346,6 +348,7 @@ def benchmark_grafp(
 
         accuracy = correct / total * 100 if total > 0 else 0
         avg_time = np.mean(query_times) if query_times else 0
+        avg_confidence = np.mean(all_scores) if all_scores else 0
 
         # Calculate average timings per step
         avg_timings = {}
@@ -355,6 +358,7 @@ def benchmark_grafp(
 
         results.conditions[condition.name] = {
             "accuracy": accuracy,
+            "avg_confidence": avg_confidence,
             "avg_query_time_ms": avg_time,
             "correct": correct,
             "total": total,
@@ -365,7 +369,7 @@ def benchmark_grafp(
         if condition.name not in results.timings:
             results.timings[condition.name] = avg_timings
 
-        print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), {avg_time:.1f}ms/query")
+        print(f"  {condition.name}: {accuracy:.1f}% ({correct}/{total}), conf={avg_confidence:.3f}, {avg_time:.1f}ms/query")
         if errors:
             print(f"    Errors: {len(errors)}")
 
@@ -512,5 +516,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-

@@ -38,11 +38,10 @@ def load_model(cfg, checkpoint_path, k=3):
     checkpoint = torch.load(checkpoint_path, map_location=DEVICE, weights_only=False)
     state_dict = checkpoint['state_dict']
     
-    # Handle DataParallel prefix mismatch
     if torch.cuda.device_count() <= 1 and any('module' in k for k in state_dict.keys()):
         state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
     
-    # Handle checkpoint key remapping (convs -> conv)
+    # Remap legacy checkpoint keys (convs -> conv)
     state_dict = {k.replace('peak_extractor.convs.', 'peak_extractor.conv.'): v for k, v in state_dict.items()}
     
     model.load_state_dict(state_dict, strict=False)
@@ -105,7 +104,6 @@ def load_fingerprints(source_dir, name='db'):
     meta_path = f'{source_dir}/{name}_metadata.npy'
     metadata = np.load(meta_path, allow_pickle=True) if os.path.exists(meta_path) else None
 
-    # Load metadata_table (rich metadata per song)
     metadata_table_path = os.path.join(source_dir, 'metadata_table.pkl')
     if os.path.exists(metadata_table_path):
         with open(metadata_table_path, 'rb') as f:
@@ -147,25 +145,19 @@ def get_index(index_type,
     References:
         https://github.com/facebookresearch/faiss/wiki/Faiss-indexes
     """
-    # GPU Setup
     if use_gpu:
         GPU_RESOURCES = faiss.StandardGpuResources()
         GPU_OPTIONS = faiss.GpuClonerOptions()
         GPU_OPTIONS.useFloat16 = True
 
-    # Fingerprint dimension
     d = train_data_shape[1]
-
-    # Build a flat (CPU) index
     index = faiss.IndexFlatL2(d)
 
     mode = index_type.lower()
-    print(f'Creating index: \033[93m{mode}\033[0m')
+    print(f'Creating index: {mode}')
     if mode == 'l2':
-        # Using L2 index
         pass
     elif mode == 'ivf':
-        # Using IVF index
         nlist = 400
         index = faiss.IndexIVFFlat(index, d, nlist)
     elif mode == 'ivfpq':
@@ -174,7 +166,6 @@ def get_index(index_type,
         index = faiss.IndexIVFPQ(index, d, n_centroids, code_sz, nbits)
 
     elif mode == 'lsh':
-        # Using LSH index
         nbits = 256
         index = faiss.IndexLSH(d, nbits)
 
@@ -202,23 +193,20 @@ def get_index(index_type,
     else:
         raise ValueError(mode.lower())
 
-    # From CPU index to GPU index
     if use_gpu:
-        print('Copy index to \033[93mGPU\033[0m.')
+        print('Copy index to GPU.')
         index = faiss.index_cpu_to_gpu(GPU_RESOURCES, 0, index, GPU_OPTIONS)
 
-    # Train index
     start_time = time.time()
     if len(train_data) > max_nitem_train:
         print('Training index using {:>3.2f} % of data...'.format(
             100. * max_nitem_train / len(train_data)))
-        # shuffle and reduce training data
         sel_tr_idx = np.random.permutation(len(train_data))
         sel_tr_idx = sel_tr_idx[:int(max_nitem_train)]
         index.train(train_data[sel_tr_idx,:])
     else:
         print('Training index...')
-        index.train(train_data) # Actually do nothing for {'l2', 'hnsw'}
+        index.train(train_data)
     print(f'Training completed in {time.time() - start_time:.2f}s')
 
     index.nprobe = 20
@@ -255,7 +243,6 @@ def save_index(index, path, use_gpu=False):
     import os
     os.makedirs(os.path.dirname(path) if os.path.dirname(path) else '.', exist_ok=True)
     
-    # If index is on GPU, copy to CPU first
     if use_gpu and hasattr(faiss, 'index_gpu_to_cpu'):
         print(f'Copying index from GPU to CPU for saving...')
         index_cpu = faiss.index_gpu_to_cpu(index)
@@ -288,7 +275,6 @@ def load_index(path, use_gpu=False):
     print(f'Loading index from: {path}')
     index = faiss.read_index(path)
     
-    # Optionally copy to GPU
     if use_gpu and hasattr(faiss, 'StandardGpuResources'):
         print('Copying index to GPU...')
         res = faiss.StandardGpuResources()
@@ -296,7 +282,6 @@ def load_index(path, use_gpu=False):
         opts.useFloat16 = True
         index = faiss.index_cpu_to_gpu(res, 0, index, opts)
     
-    # Set nprobe for IVF-based indices
     if hasattr(index, 'nprobe'):
         index.nprobe = 20
     
@@ -350,10 +335,7 @@ def recognize(query_fp, db_fingerprints, db_metadata, index, k=10, top_songs_ent
     if not FAISS_AVAILABLE:
         return _recognize_numpy(query_fp, db_fingerprints, db_metadata, k)
 
-    t0 = time.perf_counter()
     distances, indices = search(index, query_fp, k)
-    timings = time.perf_counter() - t0
-    # print(f"To index: {timings:.4f}s")
     
     return _vote_for_song(indices, db_metadata, top_songs_entropy)
 

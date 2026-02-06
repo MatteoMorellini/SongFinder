@@ -166,7 +166,6 @@ class Grapher(nn.Module):
             
             relative_pos_tensor = torch.from_numpy(np.float32(get_2d_relative_pos_embed(in_channels,
                 int(n**0.5)))).unsqueeze(0).unsqueeze(1)
-            #print(relative_pos_tensor.shape)
             relative_pos_tensor = F.interpolate(
                     relative_pos_tensor, size=(n, n//(r*r)), mode='bicubic', align_corners=False)
             self.relative_pos = nn.Parameter(-relative_pos_tensor.squeeze(1), requires_grad=False)
@@ -183,12 +182,8 @@ class Grapher(nn.Module):
     def forward(self, x):
         _tmp = x
         x = self.fc1(x)
-        B, C, N,_ = x.shape
-        
-        #relative_pos = self._get_relative_pos(self.relative_pos, H, W)
-        
-        x = self.graph_conv(x,relative_pos=None)
-        
+        B, C, N, _ = x.shape
+        x = self.graph_conv(x, relative_pos=None)
         x = self.fc2(x)
         x = self.drop_path(x) + _tmp
         return x

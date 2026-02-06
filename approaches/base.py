@@ -8,12 +8,7 @@ from typing import Optional, Tuple, Any, Dict
 
 
 class BaseSongRecognizer(ABC):
-    """
-    Abstract base class for song recognition systems.
-    
-    Both the Shazam-style and GraFP approaches implement this interface,
-    allowing them to be used interchangeably for comparison and benchmarking.
-    """
+    """Abstract base class for song recognition systems."""
     
     @abstractmethod
     def index_song(self, audio_path: Path) -> None:

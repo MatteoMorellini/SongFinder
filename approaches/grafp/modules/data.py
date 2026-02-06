@@ -1,16 +1,11 @@
-import os
-import json
 import torch
 from torch.utils.data import Dataset
 import torch.nn.functional as F
 import torchaudio
 import numpy as np
-import librosa
-import torch.nn as nn
-import warnings
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3
-from approaches.grafp.util import load_index, get_frames, qtile_normalize, qtile_norm
+from approaches.grafp.util import load_index, qtile_norm
 
 
 class NeuralfpDataset(Dataset):
@@ -25,7 +20,6 @@ class NeuralfpDataset(Dataset):
         self.n_frames = cfg['n_frames']
         self.silence = cfg['silence']
         self.error_threshold = cfg['error_threshold']
-        print(f'path is {path}')
         if train:
             self.filenames = load_index(cfg, path, mode="train")
         elif inference:
@@ -41,14 +35,8 @@ class NeuralfpDataset(Dataset):
             return self[idx + 1]
         datapath = self.filenames[str(idx)]
         try:
-            # with warnings.catch_warnings():
-            #     warnings.simplefilter("ignore")
             audio, sr = torchaudio.load(datapath)
             meta = MP3(datapath, ID3=ID3)
-
-            #print('Song:', audio_meta.tags["TIT2"].text[0], '\nAlbum:', audio_meta.tags["TPE1"].text[0], '\nArtist:', audio_meta.tags["TALB"].text[0])
-            # Title - album, artist
-
         except Exception:
             print("Error loading:" + self.filenames[str(idx)])
             self.error_counts[idx] = self.error_counts.get(idx, 0) + 1
@@ -64,11 +52,8 @@ class NeuralfpDataset(Dataset):
         clip_frames = int(self.sample_rate*self.dur)
         
         if len(audio_resampled) <= clip_frames:
-            # self.ignore_idx.append(idx)
             return self[idx + 1]
-    
-        
-        #   For training pipeline, output a random frame of the audio
+
         if self.train:
             a_i = audio_resampled
             a_j = a_i.clone()
@@ -113,15 +98,12 @@ class NeuralfpDataset(Dataset):
 
             return x_i, x_j
         
-        #   For validation / test, output consecutive (overlapping) frames
         else:
             title = ''
             if "TIT2" in meta.tags:
                 title = str(meta.tags["TIT2"].text[0])
 
             return audio_resampled, {"song": title}
-
-            # return audio_resampled
     
     def __len__(self):
         return len(self.filenames)

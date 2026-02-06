@@ -3,11 +3,7 @@ from torch import nn
 from torch.nn import Sequential as Seq, Linear as Lin, Conv2d
 
 
-##############################
-#    Basic layers
-##############################
 def act_layer(act, inplace=False, neg_slope=0.2, n_prelu=1):
-    # activation layer
 
     act = act.lower()
     if act == 'relu':
@@ -26,7 +22,6 @@ def act_layer(act, inplace=False, neg_slope=0.2, n_prelu=1):
 
 
 def norm_layer(norm, nc):
-    # normalization layer 2d
     norm = norm.lower()
     if norm == 'batch':
         layer = nn.BatchNorm2d(nc, affine=True)
