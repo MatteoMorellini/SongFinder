@@ -177,7 +177,7 @@ try:
     db_fp, db_meta, db_metadata_table = load_fingerprints(db_path)
     # Load or build FAISS index with persistence
     index_path = db_path / "index_ivfpq.faiss"
-    faiss_index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)
+    faiss_index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=False)
     log_success(f"GraFP recognizer loaded (index {'loaded' if was_loaded else 'built'})")
 except Exception as e:
     log.error(f"Error loading database from {db_path}: {e}")
@@ -199,11 +199,12 @@ def run_recognizer(method: str, mp3_path: str, cumulative_votes: Optional[Dict[i
     log_detail("Audio file", mp3_path)
     
     if method == "shazam":
-        # Helper function to get song name safely
+        # Helper function to get song name safely (use Shazam metadata, not GraFP)
         def get_song_name(song_id):
             try:
-                if hasattr(db_meta, '__getitem__') and 0 <= song_id < len(db_meta):
-                    return str(db_meta[song_id])
+                meta = shazam_adapter.metadata_table.get(song_id)
+                if meta and 'filename' in meta:
+                    return meta['filename']
                 else:
                     return f"Song {song_id}"
             except (IndexError, TypeError):
@@ -407,10 +408,22 @@ async def recognize(
             processing_path = converted_path
         else:
             processing_path = tmp_path
+        
+        # Normalize audio to handle low volume recordings
+        import numpy as np
+        try:
+            audio_data, audio_sr = sf.read(processing_path)
+            max_val = np.abs(audio_data).max()
+            if max_val > 0 and max_val < 0.5:  # If audio is too quiet
+                # Normalize to 0.9 peak
+                audio_data = audio_data * (0.9 / max_val)
+                sf.write(processing_path, audio_data, audio_sr)
+                log.info(f"🔊 Audio normalized (peak: {max_val:.3f} → 0.9)")
+        except Exception as e:
+            log.warning(f"Audio normalization failed: {e}")
 
         # Parse cumulative_votes from JSON string if provided
         parsed_cumulative_votes = None
-        print('CUMULATIVE VOTES:', cumulative_votes)
         if cumulative_votes and method.lower().strip() == "shazam":
             try:
                 import json
