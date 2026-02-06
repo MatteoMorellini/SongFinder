@@ -461,10 +461,12 @@ async def recognize(
         # Cleanup
         try:
             if tmp_path and os.path.exists(tmp_path):
-                os.remove(tmp_path)
+                print('TMP_PATH',tmp_path)
+                #os.remove(tmp_path)
                 log.debug("Temporary file cleaned up")
             if converted_path and os.path.exists(converted_path):
-                os.remove(converted_path)
+                print(converted_path)
+                #os.remove(converted_path)
                 log.debug("Converted file cleaned up")
         except Exception:
             pass

@@ -325,7 +325,10 @@ class ShazamRecognizer(BaseSongRecognizer):
                     H = -float(np.sum(p * np.log(p + eps)))
                     H_norm = H / np.log(len(p)) if len(p) > 1 else 0.0
                     best_confidence = float(1.0 - H_norm)
-                    best_confidence = max(0.0, min(1.0, best_confidence))
+                    best_confidence = max(0.0, min(1.0, 5*best_confidence))
+                    # for UI purposes, multiply best_confidence by 5
+                    # in reality, you will never have 100% confidence due to entropy formulation
+                    # empirically we know that a 20% confidence is enough to ensure a safe prediction
 
             else:
                 best_song_id = None

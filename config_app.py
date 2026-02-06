@@ -1,4 +1,4 @@
-DB_PATH_SHAZAM = "/home/riccardo.benevelli/SongFinder/fingerprints/shazam"
-DB_PATH_GRAFP = "/home/riccardo.benevelli/SongFinder/fingerprints/grafp"
-CHECKPOINT = "/home/riccardo.benevelli/SongFinder/checkpoints/model_tc_29_best.pth"
-TOP_SONGS_ENTROPY = 10
+DB_PATH_SHAZAM = "/content/drive/MyDrive/fingerprints/shazam"
+DB_PATH_GRAFP = "/content/drive/MyDrive/fingerprints/grafp"
+CHECKPOINT = "/content/drive/MyDrive/GraFP/checkpoint/model_tc_27_best.pth"
+TOP_SONGS_ENTROPY = 3
