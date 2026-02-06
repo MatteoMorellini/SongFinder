@@ -1,21 +1,48 @@
-downloads/
-scripts/download_songs.py
-myenv/
+# Data directories
 data/
-*.db
-imgs/
-.history/
-test/
-.DS_Store
-**/.DS_Store
+downloads/
+aug/
+fingerprints/
+fingerprints_test/
+
+# Model checkpoints (track only via git-lfs or manually)
+checkpoints/
+
+# Logs
+logs/
+
+# Results (track only important benchmark files)
+results/*
+!results/benchmark_grafp_500songs.json
+!results/benchmark_shazam_500songs.json
+
+# Python
 __pycache__/
 **/__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+myenv/
 pyg312/
-previous_fingerprints/
-checkpoint/
+venv/
+.venv/
 
-aug/
+# IDE
+.history/
+.vscode/
+.idea/
 
-aug-20260119T103124Z-3-001.zip
-fingerprints/
-logs/
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Archives
+*.zip
+
+# Database
+*.db

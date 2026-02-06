@@ -1,34 +1,26 @@
-# =============================================================================
-# SongFinder Requirements
-# =============================================================================
-# These versions are tested and known to work together.
-# Run: pip install -r requirements.txt
-# =============================================================================
-
-# Core ML Framework (install these first via setup_env.sh)
-torch==2.10.0
-torchvision==0.25.0
-torchaudio==2.10.0
-torch-geometric==2.7.0
-torchmetrics==1.8.2
+# Core ML Framework
+torch>=2.0.0
+torchaudio>=2.0.0
+torch-geometric>=2.0.0
+torchmetrics
 
 # Audio Processing
-librosa==0.11.0
-soundfile==0.13.1
-mutagen==1.47.0
-audioread==3.1.0
+librosa>=0.10.0
+soundfile
+mutagen
+audioread
 
-# Scientific Computing (IMPORTANT: numpy<2.0 for scipy/librosa compatibility)
-numpy==1.26.4
-scipy==1.13.1
-scikit-learn==1.8.0
+# Scientific Computing
+numpy<2.0
+scipy
+scikit-learn
 
 # Utilities
-tqdm==4.67.1
-PyYAML==6.0.3
-matplotlib==3.10.8
-networkx==3.6.1
-timm==1.0.24
-prettytable==3.17.0
+tqdm
+PyYAML
+matplotlib
+networkx
+timm
+prettytable
 
-# Note: faiss-gpu is installed via conda in setup_env.sh (not pip)
+# FAISS for similarity search (install via conda: faiss-gpu or faiss-cpu)

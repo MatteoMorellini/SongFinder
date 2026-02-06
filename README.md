@@ -1,92 +1,82 @@
 # SongFinder
 
-A song recognition system implementing two distinct approaches for audio fingerprinting and identification:
+Audio fingerprinting and song identification system implementing two approaches:
 
-1. **Shazam-style**: Traditional signal processing with spectral peaks and constellation hashing
-2. **GraFP**: Graph Neural Network based approach using contrastive learning (SimCLR)
+- **Shazam**: Traditional signal processing with spectral peaks and constellation hashing
+- **GraFP**: Graph Neural Network approach using contrastive learning (ICASSP 2025)
 
 ## Project Structure
 
 ```
-SongFinder/
-├── approaches/
-│   ├── base.py              # Abstract base class for recognizers
-│   ├── shazam/              # Shazam-style implementation
-│   │   ├── audio.py         # Audio loading, spectrogram, peak finding
-│   │   ├── config.py        # Configuration constants
-│   │   ├── hashing.py       # Constellation hashing
-│   │   ├── recognizer.py    # Main ShazamRecognizer class
-│   │   └── ...
-│   └── grafp/               # GraFP GNN implementation
-│       ├── encoder/         # Graph encoder and GCN library
-│       ├── simclr/          # Contrastive learning
-│       ├── train.py         # Training script
-│       ├── generate.py      # Fingerprint generation
-│       └── ...
-├── scripts/
-│   ├── recognize.py         # Unified recognition CLI
-│   └── index_songs.py       # Song indexing CLI
-└── data/                    # Audio files (gitignored)
+approaches/
+├── shazam/              # Shazam-style implementation
+└── grafp/               # GraFP GNN implementation
+    ├── encoder/         # Graph encoder and GCN
+    └── simclr/          # Contrastive learning
+
+scripts/
+├── index_songs.py       # Index songs into database
+├── recognize.py         # Query and recognize songs
+└── benchmark.py         # Benchmark evaluation
+
+slurm/                   # SLURM job scripts for HPC
 ```
 
-## Quick Start
+## Installation
 
-### Shazam Approach
+```bash
+# Create environment
+conda create -n songfinder python=3.12
+conda activate songfinder
 
-1. **Index songs:**
-   ```bash
-   python scripts/index_songs.py --approach shazam --folder data/ --pattern "*.flac"
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-2. **Recognize a song:**
-   ```bash
-   python scripts/recognize.py --approach shazam --query test/sample.mp3
-   ```
+# Install FAISS (GPU or CPU)
+conda install -c conda-forge faiss-gpu  # or faiss-cpu
+```
 
-### GraFP Approach
+## Usage
 
-1. **Train the model:**
-   ```bash
-   python approaches/grafp/train.py --config approaches/grafp/config/grafp.yaml \
-       --train_dir /path/to/training/data --val_dir /path/to/validation/data
-   ```
+### Index Songs
 
-2. **Generate fingerprints:**
-   ```bash
-   python approaches/grafp/generate.py --test_dir /path/to/audio \
-       --ckp /path/to/checkpoint.pth --output_dir output/
-   ```
+```bash
+# Shazam approach
+python scripts/index_songs.py --approach shazam --folder data/ --pattern "*.flac"
 
-3. **Query:**
-   ```bash
-   python approaches/grafp/query.py --test_dir /path/to/query.json
-   ```
+# GraFP approach
+python scripts/index_songs.py --approach grafp --folder data/ --pattern "*.flac" \
+    --checkpoint checkpoints/model_tc_29_best.pth
+```
 
-## Both Approaches Use a Common Interface
+### Recognize Song
+
+```bash
+# Shazam
+python scripts/recognize.py --approach shazam --query sample.mp3
+
+# GraFP
+python scripts/recognize.py --approach grafp --query sample.mp3 \
+    --checkpoint checkpoints/model_tc_29_best.pth
+```
+
+### Benchmark
+
+```bash
+python scripts/benchmark.py --approach shazam --reference_dir data/ --augmented_dir aug/
+```
+
+## API
 
 ```python
 from approaches.shazam import ShazamRecognizer
 
 recognizer = ShazamRecognizer()
 recognizer.load()
-song_name, score, metadata = recognizer.recognize(query_path)
+song_name, score, metadata = recognizer.recognize("sample.mp3")
 ```
-
-## Requirements
-
-**Shazam approach:**
-- librosa
-- numpy
-- soundfile
-- tqdm
-
-**GraFP approach:**
-- torch, torchaudio
-- timm
-- faiss-gpu (or faiss-cpu)
-- See `approaches/grafp/requirements.txt`
 
 ## References
 
-- Shazam: Wang, A. (2003). "An Industrial-Strength Audio Search Algorithm"
-- GraFP: Bhattacharjee et al. (2025). "GraFPrint: A GNN-Based Approach for Audio Identification" (ICASSP 2025)
+- Wang, A. (2003). "An Industrial-Strength Audio Search Algorithm"
+- Bhattacharjee et al. (2025). "GraFPrint: A GNN-Based Approach for Audio Identification" (ICASSP 2025)
