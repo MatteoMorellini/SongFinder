@@ -5,6 +5,8 @@ Audio fingerprinting and song identification system implementing two approaches:
 - **Shazam**: Traditional signal processing with spectral peaks and constellation hashing
 - **GraFP**: Graph Neural Network approach using contrastive learning (ICASSP 2025)
 
+Detailed descriptions of both methods and experimental results are available in the [report](docs/report.pdf)
+
 ## Project Structure
 
 ```
