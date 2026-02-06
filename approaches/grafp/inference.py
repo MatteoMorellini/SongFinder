@@ -364,7 +364,7 @@ def _vote_for_song(indices, db_metadata, top_songs_entropy):
                 if isinstance(song, (list, np.ndarray)):
                     song = song[0] if len(song) > 0 else ""
                 votes[song] += 1
-    
+    print('most votes:', votes.most_common(10))
     if votes:
         best_song, best_count = votes.most_common(1)[0]
         # restrict to top-K to avoid long tails dominating entropy

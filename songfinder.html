@@ -338,6 +338,19 @@
             font-size: 1.2rem;
         }
 
+        .prediction-artist {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+
+        .prediction-album {
+            font-size: 1rem;
+            color: var(--text-dim);
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
         .prediction-confidence {
             font-size: 2.5rem;
             font-weight: 700;
@@ -812,6 +825,8 @@
             <div class="current-prediction" id="currentPrediction">
                 <div class="prediction-label">Current Detection</div>
                 <div class="prediction-title" id="predictionTitle">Tap to start listening</div>
+                <div class="prediction-artist" id="predictionArtist"></div>
+                <div class="prediction-album" id="predictionAlbum"></div>
                 <div class="prediction-confidence" id="predictionConfidence">—</div>
             </div>
 
@@ -894,6 +909,8 @@
                 // Current prediction display
                 this.currentPrediction = document.getElementById('currentPrediction');
                 this.predictionTitle = document.getElementById('predictionTitle');
+                this.predictionArtist = document.getElementById('predictionArtist');
+                this.predictionAlbum = document.getElementById('predictionAlbum');
                 this.predictionConfidence = document.getElementById('predictionConfidence');
                 
                 // Toolbar
@@ -1370,6 +1387,23 @@
                 if (result.title) {
                     this.predictionTitle.textContent = result.title;
                     this.predictionTitle.classList.remove('no-match');
+                    
+                    // Display artist if available
+                    if (result.artist) {
+                        this.predictionArtist.textContent = result.artist;
+                        this.predictionArtist.style.display = 'block';
+                    } else {
+                        this.predictionArtist.style.display = 'none';
+                    }
+                    
+                    // Display album if available
+                    if (result.album) {
+                        this.predictionAlbum.textContent = result.album;
+                        this.predictionAlbum.style.display = 'block';
+                    } else {
+                        this.predictionAlbum.style.display = 'none';
+                    }
+                    
                     this.predictionConfidence.textContent = `${confidence.toFixed(1)}%`;
                     this.currentPrediction.classList.add('has-prediction');
                     
@@ -1381,6 +1415,8 @@
                 } else {
                     this.predictionTitle.textContent = 'No match found';
                     this.predictionTitle.classList.add('no-match');
+                    this.predictionArtist.style.display = 'none';
+                    this.predictionAlbum.style.display = 'none';
                     this.predictionConfidence.textContent = `${confidence.toFixed(1)}%`;
                     this.predictionConfidence.classList.add('low');
                     this.currentPrediction.classList.remove('has-prediction');
@@ -1428,6 +1464,8 @@
                     // Reset prediction display
                     this.predictionTitle.textContent = 'Tap to start listening';
                     this.predictionTitle.classList.remove('no-match');
+                    this.predictionArtist.style.display = 'none';
+                    this.predictionAlbum.style.display = 'none';
                     this.predictionConfidence.textContent = '—';
                     this.currentPrediction.classList.remove('has-prediction');
                     

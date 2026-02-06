@@ -88,7 +88,7 @@ def main():
         print(f"Database: {len(db_meta)} fingerprints loaded")
 
         index_path = db_path / "index_ivfpq.faiss"
-        index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=True)
+        index, was_loaded = get_or_build_index(db_fp, str(index_path), use_gpu=False)
 
         t0 = time.perf_counter()
 

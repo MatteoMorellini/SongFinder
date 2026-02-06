@@ -137,7 +137,66 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 class RecognizerResult:
     title: Optional[str]
     confidence: float
+    artist: Optional[str] = None
+    album: Optional[str] = None
     cumulative_votes: Optional[Dict[int, int]] = None  # Only for Shazam
+
+
+def format_artist(artist: Optional[str]) -> Optional[str]:
+    """Format artist string to handle featuring artists nicely.
+    
+    Converts "Artist1; Artist2; Artist3" to "Artist1 feat. Artist2 & Artist3"
+    """
+    if not artist:
+        return artist
+    
+    # Split by common separators: semicolon, slash, or " / "
+    parts = [p.strip() for p in artist.replace(' / ', ';').replace('/', ';').split(';') if p.strip()]
+    
+    if len(parts) == 1:
+        return parts[0]
+    elif len(parts) == 2:
+        return f"{parts[0]} feat. {parts[1]}"
+    else:
+        # First artist feat. second & third & fourth...
+        return f"{parts[0]} feat. {' & '.join(parts[1:])}"
+
+
+def parse_filename_metadata(filename: str) -> Dict[str, Optional[str]]:
+    """Parse metadata from filename format 'Artist - Album - Track# Title'.
+    
+    Example: "JAY Z - Reasonable Doubt - 01-04 Dead Presidents II"
+    -> {'artist': 'JAY Z', 'album': 'Reasonable Doubt', 'title': 'Dead Presidents II'}
+    """
+    import re
+    
+    result = {'title': None, 'artist': None, 'album': None, 'filename': filename}
+    
+    if not filename:
+        return result
+    
+    # Split by " - " (with spaces around dash)
+    parts = filename.split(' - ')
+    
+    if len(parts) >= 3:
+        # Format: "Artist - Album - Track# Title"
+        result['artist'] = parts[0].strip()
+        result['album'] = parts[1].strip()
+        
+        # The rest is "Track# Title" - extract title after track number
+        track_and_title = ' - '.join(parts[2:])
+        # Remove track number prefix like "01-04 " or "01 " or "1-4 "
+        title_match = re.sub(r'^[\d-]+\s+', '', track_and_title)
+        result['title'] = title_match.strip() if title_match.strip() else track_and_title.strip()
+    elif len(parts) == 2:
+        # Format: "Artist - Title"
+        result['artist'] = parts[0].strip()
+        result['title'] = parts[1].strip()
+    else:
+        # Just use filename as title
+        result['title'] = filename
+    
+    return result
 
 # -----------------------------
 # Shazam recognizer
@@ -199,15 +258,23 @@ def run_recognizer(method: str, mp3_path: str, cumulative_votes: Optional[Dict[i
     log_detail("Audio file", mp3_path)
     
     if method == "shazam":
-        # Helper function to get song name safely (use Shazam metadata, not GraFP)
+        # Helper function to get song name safely from Shazam's metadata_table
         def get_song_name(song_id):
             try:
-                meta = shazam_adapter.metadata_table.get(song_id)
-                if meta and 'filename' in meta:
-                    return meta['filename']
-                else:
-                    return f"Song {song_id}"
-            except (IndexError, TypeError):
+                metadata = shazam_adapter.metadata_table.get(song_id)
+                if metadata:
+                    title = metadata.get('title', '')
+                    artist = metadata.get('artist', '')
+                    if title and artist:
+                        return f"{artist} - {title}"
+                    elif title:
+                        return title
+                    elif artist:
+                        return artist
+                    elif 'filename' in metadata:
+                        return metadata['filename']
+                return f"Song {song_id}"
+            except (KeyError, TypeError):
                 return f"Song {song_id}"
         
         # The recognizer handles vote accumulation internally, we just pass cumulative_votes
@@ -230,13 +297,31 @@ def run_recognizer(method: str, mp3_path: str, cumulative_votes: Optional[Dict[i
                 song_name = get_song_name(song_id)
                 log_detail(f"  Song {song_id}", f"{song_name} - {votes} votes")
         
+        # Extract metadata from recognizer response
+        song_metadata = meta.get("song_metadata", {})
+        song_title = song_metadata.get("title") if song_metadata else None
+        song_artist = song_metadata.get("artist") if song_metadata else None
+        song_album = song_metadata.get("album") if song_metadata else None
+        
+        # Fallback: parse from filename if metadata not available
+        if not song_title and title:
+            parsed = parse_filename_metadata(title)
+            song_title = song_title or parsed.get("title")
+            song_artist = song_artist or parsed.get("artist")
+            song_album = song_album or parsed.get("album")
+        
         # Log result
         if title:
-            log_success(f"Match found: '{title}' (confidence: {confidence:.2%})")
+            display_name = song_title or title
+            if song_artist:
+                display_name = f"{format_artist(song_artist)} - {display_name}"
+            log_success(f"Match found: '{display_name}' (confidence: {confidence:.2%})")
         
         return RecognizerResult(
-            title=title,
+            title=song_title or title,  # Use song title if available, fallback to filename
             confidence=float(confidence),
+            artist=format_artist(song_artist),
+            album=song_album,
             cumulative_votes=updated_votes
         )
     else:
@@ -257,13 +342,31 @@ def run_recognizer(method: str, mp3_path: str, cumulative_votes: Optional[Dict[i
         
         title, confidence = grafp_recognize(query_fp.cpu().numpy(), db_fp, db_meta, faiss_index, top_songs_entropy = TOP_SONGS_ENTROPY)
         
+        # Extract metadata from db_metadata_table using filename as key
+        song_metadata = db_metadata_table.get(title) if title and db_metadata_table else None
+        song_title = song_metadata.get("title") if song_metadata else None
+        song_artist = song_metadata.get("artist") if song_metadata else None
+        song_album = song_metadata.get("album") if song_metadata else None
+        
+        # Fallback: parse from filename if metadata not available
+        if not song_title and title:
+            parsed = parse_filename_metadata(title)
+            song_title = song_title or parsed.get("title")
+            song_artist = song_artist or parsed.get("artist")
+            song_album = song_album or parsed.get("album")
+        
         # Log result
         if title:
-            log_success(f"Match found: '{title}' (confidence: {confidence:.2%})")
+            display_name = song_title or title
+            if song_artist:
+                display_name = f"{format_artist(song_artist)} - {display_name}"
+            log_success(f"Match found: '{display_name}' (confidence: {confidence:.2%})")
         
         return RecognizerResult(
-            title=title,
+            title=song_title or title,  # Use song title if available, fallback to filename
             confidence=float(confidence),
+            artist=format_artist(song_artist),
+            album=song_album,
             cumulative_votes=None  # GraFP doesn't support cumulative votes
         )
 
@@ -441,6 +544,8 @@ async def recognize(
         response_data = {
             "method": method.lower().strip(),
             "title": result.title,
+            "artist": result.artist,
+            "album": result.album,
             "confidence": result.confidence,   # normalized [0,1]
         }
         
