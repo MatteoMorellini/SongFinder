@@ -1,0 +1,766 @@
+{
+  "grafp": {
+    "approach": "GraFP",
+    "n_db_songs": 1174,
+    "n_queries": 500,
+    "db_load_time_ms": 25096.572637557983,
+    "conditions": {
+      "clean_10s": {
+        "accuracy": 98.0,
+        "avg_confidence": 0.680585733393142,
+        "avg_query_time_ms": 771.0044834711589,
+        "correct": 490,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-08 Caught, Can We Get A Witness_",
+            "score": 0.005508699818351448
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971)",
+            "score": 0.01936901324832474
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971)",
+            "score": 0.013438386225151033
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-14 Rebel Without A Pause.flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-14 Rebel Without A Pause",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-04 Rebel Without A Pause (Instrumental)",
+            "score": 0.5422073596917929
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj).flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj)",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-11 ___Flawless (feat. Chimamanda Ngozi Adichie)",
+            "score": 0.5037162742983726
+          },
+          {
+            "file": "Prince - Purple Rain - 01-05 Darling Nikki.flac",
+            "expected": "Prince - Purple Rain - 01-05 Darling Nikki",
+            "predicted": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-18 Strange Loop (2018 Remaster)",
+            "score": 0.03794572307410993
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Patti Smith - Horses - 01-03 Birdland",
+            "score": 0.010012607192130707
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 01-15 I Don't Mind (Live At The Apollo Theater_1962)",
+            "score": 0.5096201569655796
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Kendrick Lamar - To Pimp A Butterfly - 01-16 Mortal Man",
+            "score": 0.09492440357285559
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-05 Blow Remix (feat. Pharrell Williams)",
+            "score": 0.42203674908074573
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.536842501571402,
+          "transform": 0.0011128881429322065,
+          "model_inference": 0.06575293108075857,
+          "search": 0.16729433694528414,
+          "total": 0.7710044834711589
+        }
+      },
+      "clean_5s": {
+        "accuracy": 97.2,
+        "avg_confidence": 0.6095554853996823,
+        "avg_query_time_ms": 645.1228497107513,
+        "correct": 486,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-05 Never Said (2018 Remaster).flac",
+            "expected": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-05 Never Said (2018 Remaster)",
+            "predicted": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-18 Strange Loop (2018 Remaster)",
+            "score": 0.44411658738022775
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Van Morrison - Astral Weeks - 01-01 Astral Weeks (1999 Remaster)",
+            "score": 0.007301687205749086
+          },
+          {
+            "file": "JAY Z - Reasonable Doubt - 01-10 Friend Or Foe.flac",
+            "expected": "JAY Z - Reasonable Doubt - 01-10 Friend Or Foe",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.2555390772820775
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.48806737787284604
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.006403570928970037
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-03 Visions of Johanna",
+            "score": 0.007285142874238759
+          },
+          {
+            "file": "The Beatles - Abbey Road (Remastered) - 01-03 Maxwell's Silver Hammer (Remastered 2009).flac",
+            "expected": "The Beatles - Abbey Road (Remastered) - 01-03 Maxwell's Silver Hammer (Remastered 2009)",
+            "predicted": "Bob Dylan - Highway 61 Revisited - 01-05 Ballad of a Thin Man",
+            "score": 0.06807833237438443
+          },
+          {
+            "file": "Jimi Hendrix - Axis_ Bold As Love - 01-13 Bold as Love.flac",
+            "expected": "Jimi Hendrix - Axis_ Bold As Love - 01-13 Bold as Love",
+            "predicted": "Nirvana - Nevermind - 01-13 Endless, Nameless",
+            "score": 0.013261695523542172
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj).flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj)",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-11 ___Flawless (feat. Chimamanda Ngozi Adichie)",
+            "score": 0.484010074691129
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Patti Smith - Horses - 01-03 Birdland",
+            "score": 0.023912508473404537
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 01-15 I Don't Mind (Live At The Apollo Theater_1962)",
+            "score": 0.6196932500182046
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.09179873425390161
+          },
+          {
+            "file": "Pink Floyd - The Dark Side of the Moon - 01-08 Any Colour You Like.flac",
+            "expected": "Pink Floyd - The Dark Side of the Moon - 01-08 Any Colour You Like",
+            "predicted": "Bruce Springsteen - Born To Run - 01-08 Jungleland",
+            "score": 0.03725210744589924
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-05 Blow Remix (feat. Pharrell Williams)",
+            "score": 0.5159426878783133
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5355491667976603,
+          "transform": 0.0007730101887136698,
+          "model_inference": 0.030505793541669844,
+          "search": 0.07829301567096263,
+          "total": 0.6451228497107513
+        }
+      },
+      "clean_3s": {
+        "accuracy": 98.4,
+        "avg_confidence": 0.5436860850632821,
+        "avg_query_time_ms": 620.1756380875595,
+        "correct": 492,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-14 Rebel Without A Pause",
+            "score": 0.007159407673789753
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.5663752703409138
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "The Doors - The Doors - 01-01 Break on Through (To the Other Side)",
+            "score": 0.009722646070755014
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971)",
+            "score": 0.016499519968908194
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.15808222525844629
+          },
+          {
+            "file": "Ramones - Ramones - 01-09 Havana Affair.flac",
+            "expected": "Ramones - Ramones - 01-09 Havana Affair",
+            "predicted": "Radiohead - OK Computer - 01-11 Lucky-2",
+            "score": 0.09884326318680492
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-04 Crew Love.flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-04 Crew Love",
+            "predicted": "Beyonce\u0301 - RENAISSANCE - 01-12 THIQUE",
+            "score": 0.1234585201587558
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Neil Young - After the Gold Rush (2009 Remaster) - 01-06 Oh, Lonesome Me",
+            "score": 0.006982965394340845
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.537974267912563,
+          "transform": 0.0007811248996295035,
+          "model_inference": 0.025606267342343926,
+          "search": 0.055812100123614074,
+          "total": 0.6201756380875595
+        }
+      },
+      "snr_10db": {
+        "accuracy": 98.4,
+        "avg_confidence": 0.6106885976565501,
+        "avg_query_time_ms": 769.8263634769246,
+        "correct": 492,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971)",
+            "score": 0.008980103024008423
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.3519024846485651
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 01-01 Pharaoh's Dance",
+            "score": 0.023007642423036878
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 01-01 Pharaoh's Dance",
+            "score": 0.012610370435030327
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Miles Davis - Bitches Brew - 02-05 Feio (feat. Wayne Shorter, John McLaughlin, Chick Corea, Joe Zawinul & Dave Holland)",
+            "score": 0.058958973437467366
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 01-15 I Don't Mind (Live At The Apollo Theater_1962)",
+            "score": 0.464277065329167
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.044946821562010575
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-05 Blow Remix (feat. Pharrell Williams)",
+            "score": 0.5049659750470135
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5345976478643716,
+          "transform": 0.000787389726843685,
+          "model_inference": 0.06501425554044545,
+          "search": 0.16942532044043765,
+          "total": 0.7698263634769246
+        }
+      },
+      "snr_5db": {
+        "accuracy": 98.2,
+        "avg_confidence": 0.5604437276374328,
+        "avg_query_time_ms": 770.5239639128558,
+        "correct": 491,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-08 Caught, Can We Get A Witness_",
+            "score": 0.021502267887058335
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.4049964217739047
+          },
+          {
+            "file": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-04 Gumboots (with Boyoyo Boys).flac",
+            "expected": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-04 Gumboots (with Boyoyo Boys)",
+            "predicted": "Michael Jackson - Thriller - 01-01 Wanna Be Startin' Somethin'",
+            "score": 0.055588145869286176
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.007591789909042301
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 01-01 Pharaoh's Dance",
+            "score": 0.01607885244858931
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj).flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj)",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-11 ___Flawless (feat. Chimamanda Ngozi Adichie)",
+            "score": 0.4266259164636428
+          },
+          {
+            "file": "Prince - Purple Rain - 01-05 Darling Nikki.flac",
+            "expected": "Prince - Purple Rain - 01-05 Darling Nikki",
+            "predicted": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-18 Strange Loop (2018 Remaster)",
+            "score": 0.05214480842141278
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Miles Davis - Bitches Brew - 02-04 Sanctuary (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.04339944112202576
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.21625414141524701
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5364822307820432,
+          "transform": 0.0007609663773328066,
+          "model_inference": 0.0650282385898754,
+          "search": 0.1682507522762753,
+          "total": 0.7705239639128558
+        }
+      },
+      "snr_0db": {
+        "accuracy": 95.39999999999999,
+        "avg_confidence": 0.43086535557050915,
+        "avg_query_time_ms": 771.5933501455002,
+        "correct": 477,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Prince - Sign O' The Times - 01-05 It (2020 Remaster)",
+            "score": 0.005539277180284685
+          },
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-15 Can You See Me.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-15 Can You See Me",
+            "predicted": "Alanis Morissette - Jagged Little Pill - 01-12 Wake Up",
+            "score": 0.053850195134033774
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.5844839006055138
+          },
+          {
+            "file": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-14 Friend of Mine (2005 Remaster).flac",
+            "expected": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-14 Friend of Mine (2005 Remaster)",
+            "predicted": "Bob Dylan - Blood On The Tracks - 01-08 If You See Her, Say Hello",
+            "score": 0.05415480131691375
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 01-01 Pharaoh's Dance",
+            "score": 0.01560163447367624
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 03-10 I'm A Greedy Man (Pt. 1)",
+            "score": 0.005234305944807227
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version).flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version)",
+            "predicted": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-10 Protect Ya Neck",
+            "score": 0.5519912286224886
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-03 Headlines (Explicit Version).flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-03 Headlines (Explicit Version)",
+            "predicted": "James Brown - Star Time - 02-13 Licking Stick - Licking Stick (Pts.1 & 2 _ Single Version)",
+            "score": 0.12519405694060481
+          },
+          {
+            "file": "Aretha Franklin - Lady Soul - 01-08 Come Back Baby.flac",
+            "expected": "Aretha Franklin - Lady Soul - 01-08 Come Back Baby",
+            "predicted": "Prince - Sign O' The Times - 02-06 It's Gonna Be A Beautiful Night (2020 Remaster)",
+            "score": 0.3267529347670165
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro).flac",
+            "expected": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro)",
+            "predicted": "Radiohead - Kid A - 01-01 Everything In Its Right Place",
+            "score": 0.12257507444626103
+          },
+          {
+            "file": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-10 Forgive Them Father.flac",
+            "expected": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-10 Forgive Them Father",
+            "predicted": "Talking Heads - Remain in Light - 01-08 The Overload",
+            "score": 0.12119117870345553
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-01 Busta's Intro (feat. Busta Rhymes).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-01 Busta's Intro (feat. Busta Rhymes)",
+            "predicted": "A Tribe Called Quest - The Low End Theory - 01-11 Jazz (We've Got)",
+            "score": 0.08610109492636486
+          },
+          {
+            "file": "Patti Smith - Horses - 01-06 Break It Up.flac",
+            "expected": "Patti Smith - Horses - 01-06 Break It Up",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-15 All Down The Line",
+            "score": 0.05821903883855495
+          },
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-14 The Card Cheat (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-14 The Card Cheat (Remastered)",
+            "predicted": "Radiohead - Kid A - 01-02 Kid A",
+            "score": 0.08937355458597496
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-03 Graduation Day.flac",
+            "expected": "Kanye West - The College Dropout - 01-03 Graduation Day",
+            "predicted": "Drake - Take Care (Deluxe) - 01-18 The Ride",
+            "score": 0.17704133611323158
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Alanis Morissette - Jagged Little Pill - 01-13 You Oughta Know (Jimmy the Saint Blend)",
+            "score": 0.05794575298780891
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-02 We Don't Care.flac",
+            "expected": "Kanye West - The College Dropout - 01-02 We Don't Care",
+            "predicted": "Stevie Wonder - Songs In The Key Of Life - 02-03 Black Man",
+            "score": 0.05533536360532343
+          },
+          {
+            "file": "Outkast - Aquemini - 01-07 Slump.flac",
+            "expected": "Outkast - Aquemini - 01-07 Slump",
+            "predicted": "Frank Ocean - Blonde - 01-17 Futura Free",
+            "score": 0.10588944525178212
+          },
+          {
+            "file": "The Beatles - Abbey Road (Remastered) - 01-14 Golden Slumbers (Remastered 2009).flac",
+            "expected": "The Beatles - Abbey Road (Remastered) - 01-14 Golden Slumbers (Remastered 2009)",
+            "predicted": "Radiohead - Kid A - 01-03 The National Anthem",
+            "score": 0.05444085501191687
+          },
+          {
+            "file": "Frank Ocean - Blonde - 01-14 White Ferrari-2.flac",
+            "expected": "Frank Ocean - Blonde - 01-14 White Ferrari-2",
+            "predicted": "Alanis Morissette - Jagged Little Pill - 01-13 You Oughta Know (Jimmy the Saint Blend)",
+            "score": 0.23228658142201108
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Kendrick Lamar - To Pimp A Butterfly - 01-16 Mortal Man",
+            "score": 0.10828972025579453
+          },
+          {
+            "file": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-05 Doo Wop (That Thing).flac",
+            "expected": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-05 Doo Wop (That Thing)",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-09 Prophets Of Rage (Power Version)",
+            "score": 0.022470944220688516
+          },
+          {
+            "file": "Beyonce\u0301 - RENAISSANCE - 01-12 THIQUE.flac",
+            "expected": "Beyonce\u0301 - RENAISSANCE - 01-12 THIQUE",
+            "predicted": "Alanis Morissette - Jagged Little Pill - 01-13 You Oughta Know (Jimmy the Saint Blend)",
+            "score": 0.10703578261831592
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5372182702138089,
+          "transform": 0.0007782337055541574,
+          "model_inference": 0.0650050777955912,
+          "search": 0.16859003977105022,
+          "total": 0.7715933501455001
+        }
+      },
+      "ir_10s": {
+        "accuracy": 98.0,
+        "avg_confidence": 0.5341914435265576,
+        "avg_query_time_ms": 781.3970512254164,
+        "correct": 490,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Amy Winehouse - Back To Black - 01-01 Rehab",
+            "score": 0.03969946600429142
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.5485408201002133
+          },
+          {
+            "file": "Aretha Franklin - I Never Loved a Man the Way I Love You - 01-07 Dr. Feelgood (Love Is a Serious Business).flac",
+            "expected": "Aretha Franklin - I Never Loved a Man the Way I Love You - 01-07 Dr. Feelgood (Love Is a Serious Business)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-11 1983...(A Merman I Should Turn to Be)",
+            "score": 0.027248325953703856
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "Miles Davis - Bitches Brew - 01-01 Pharaoh's Dance",
+            "score": 0.01255471597553115
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 04-03 Get On The Good Foot (Single Version _ Mono)",
+            "score": 0.014895241399422887
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-14 Rebel Without A Pause.flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-14 Rebel Without A Pause",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-04 Rebel Without A Pause (Instrumental)",
+            "score": 0.4840789738080499
+          },
+          {
+            "file": "Kendrick Lamar - To Pimp A Butterfly - 01-07 Alright.flac",
+            "expected": "Kendrick Lamar - To Pimp A Butterfly - 01-07 Alright",
+            "predicted": "Kendrick Lamar - To Pimp A Butterfly - 01-16 Mortal Man",
+            "score": 0.19718285881704978
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Patti Smith - Horses - 01-03 Birdland",
+            "score": 0.03677992050944889
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-06 Night Of The Living Baseheads (Terminator X Meets DST And Chuck Chill Out Instrumental Mix).flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-06 Night Of The Living Baseheads (Terminator X Meets DST And Chuck Chill Out Instrumental Mix)",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-05 Night Of The Living Baseheads (Anti-High Blood Pressure Encounter Mix)",
+            "score": 0.3308268912629012
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.04070709467060862
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5478594021243043,
+          "transform": 0.0006828388054855168,
+          "model_inference": 0.06493400636175647,
+          "search": 0.16791923184460028,
+          "total": 0.7813970512254164
+        }
+      },
+      "ir_snr_5db": {
+        "accuracy": 97.39999999999999,
+        "avg_confidence": 0.41840578655851096,
+        "avg_query_time_ms": 783.5939819160849,
+        "correct": 487,
+        "total": 500,
+        "errors": [
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-08 Instrumental Bridge #3 (Live At The Apollo Theater_1962)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-13 Obviously Five Believers",
+            "score": 0.05011462518981169
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Erykah Badu - Baduizm - 01-12 Sometimes",
+            "score": 0.350820907712289
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-04 Instrumental Bridge #1 (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971)",
+            "score": 0.010803575463008364
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-06 Instrumental Bridge #2 (Live At The Apollo Theater_1962)",
+            "predicted": "Jimi Hendrix - Are You Experienced - 01-12 Stone Free",
+            "score": 0.012019529315998367
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version).flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version)",
+            "predicted": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-10 Protect Ya Neck",
+            "score": 0.32675970915570374
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro).flac",
+            "expected": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro)",
+            "predicted": "Erykah Badu - Baduizm - 01-14 Rim Shot (Outro)",
+            "score": 0.14069677270629588
+          },
+          {
+            "file": "Kendrick Lamar - To Pimp A Butterfly - 01-07 Alright.flac",
+            "expected": "Kendrick Lamar - To Pimp A Butterfly - 01-07 Alright",
+            "predicted": "Kendrick Lamar - To Pimp A Butterfly - 01-05 These Walls",
+            "score": 0.12747062172970103
+          },
+          {
+            "file": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-16 Drinkin' Again (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.03556090420589808
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-04 Crew Love.flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-04 Crew Love",
+            "predicted": "Frank Ocean - Blonde - 01-01 Nikes-2",
+            "score": 0.05429706266613843
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-07 I Don't Mind (Live At The Apollo Theater_1962)",
+            "predicted": "James Brown - Star Time - 01-15 I Don't Mind (Live At The Apollo Theater_1962)",
+            "score": 0.3863161608656236
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-10 Medley_ Please Please Please_You've Got The Power_I Found Someone (Live At The Apollo Theater, 1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-10 Medley_ Please Please Please_You've Got The Power_I Found Someone (Live At The Apollo Theater, 1962)",
+            "predicted": "The Stooges - Funhouse - 01-03 T.V. Eye",
+            "score": 0.03471520446539167
+          },
+          {
+            "file": "John Lennon - Plastic Ono Band - 01-03 I Found Out (Remastered 2010).flac",
+            "expected": "John Lennon - Plastic Ono Band - 01-03 I Found Out (Remastered 2010)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-12 Moon, Turn the Tides...Gently Gently Away",
+            "score": 0.3646944584309033
+          },
+          {
+            "file": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude).flac",
+            "expected": "Outkast - Stankonia - 01-23 Pre-Nump (Interlude)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.21647745139066332
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5503201012783684,
+          "transform": 0.0007180459564551711,
+          "model_inference": 0.06496872970461845,
+          "search": 0.1675854553533718,
+          "total": 0.7835939819160849
+        }
+      }
+    },
+    "timings": {
+      "clean_10s": {
+        "load_audio": 0.536842501571402,
+        "transform": 0.0011128881429322065,
+        "model_inference": 0.06575293108075857,
+        "search": 0.16729433694528414,
+        "total": 0.7710044834711589
+      },
+      "clean_5s": {
+        "load_audio": 0.5355491667976603,
+        "transform": 0.0007730101887136698,
+        "model_inference": 0.030505793541669844,
+        "search": 0.07829301567096263,
+        "total": 0.6451228497107513
+      },
+      "clean_3s": {
+        "load_audio": 0.537974267912563,
+        "transform": 0.0007811248996295035,
+        "model_inference": 0.025606267342343926,
+        "search": 0.055812100123614074,
+        "total": 0.6201756380875595
+      },
+      "snr_10db": {
+        "load_audio": 0.5345976478643716,
+        "transform": 0.000787389726843685,
+        "model_inference": 0.06501425554044545,
+        "search": 0.16942532044043765,
+        "total": 0.7698263634769246
+      },
+      "snr_5db": {
+        "load_audio": 0.5364822307820432,
+        "transform": 0.0007609663773328066,
+        "model_inference": 0.0650282385898754,
+        "search": 0.1682507522762753,
+        "total": 0.7705239639128558
+      },
+      "snr_0db": {
+        "load_audio": 0.5372182702138089,
+        "transform": 0.0007782337055541574,
+        "model_inference": 0.0650050777955912,
+        "search": 0.16859003977105022,
+        "total": 0.7715933501455001
+      },
+      "ir_10s": {
+        "load_audio": 0.5478594021243043,
+        "transform": 0.0006828388054855168,
+        "model_inference": 0.06493400636175647,
+        "search": 0.16791923184460028,
+        "total": 0.7813970512254164
+      },
+      "ir_snr_5db": {
+        "load_audio": 0.5503201012783684,
+        "transform": 0.0007180459564551711,
+        "model_inference": 0.06496872970461845,
+        "search": 0.1675854553533718,
+        "total": 0.7835939819160849
+      }
+    }
+  }
+}

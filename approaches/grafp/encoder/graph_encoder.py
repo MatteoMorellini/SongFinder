@@ -1,5 +1,3 @@
-import sys
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -69,26 +67,6 @@ class GraphEncoder(nn.Module):
         
         super().__init__()
         
-        """
-        Args:   
-        Inputs:
-            k: K for KNN
-            conv: Type of graph conv. Mr-conv/edgeconv/GIN/GCN
-            act: activation function
-            norm: normalization type
-            bias: True or False
-            dropout: dropout value to be used
-            dilation: Graph dilation 
-            epsilon: epsilon
-            size: size of the model . Either small or medium
-            emb_dims: output emb_dim
-            in_channels: channels of the input
-            num_points: num points in the pointcloud
-        Outputs:
-            None  
-        """
-        
-        # Different versions of the encoder 
         if size == 't':
             self.blocks = [2,2,6,2]
             self.channels = [64, 128, 256, 512]
@@ -104,8 +82,8 @@ class GraphEncoder(nn.Module):
         else:
             self.blocks = [2,2,18,2]
             self.channels = [128, 256, 512, 1024]
-        self.k = int(k)  # number of edges per node  
-        self.act = act 
+        self.k = int(k)
+        self.act = act
         self.norm = norm
         self.bias = bias
         self.drop_path = drop_path
@@ -121,9 +99,8 @@ class GraphEncoder(nn.Module):
 
 
         num_k  = [int(x.item()) for x in torch.linspace(k,k,self.num_blocks)]
-        max_dilation = 128//max(num_k) # max_dilation value 
+        max_dilation = 128//max(num_k)
 
-        # Stem conv for extracting non linear representation from the points
         self.stem = nn.Sequential(nn.Conv2d(in_channels,self.channels[0], kernel_size=1, bias=False),
                                    nn.BatchNorm2d(self.channels[0]),
                                    nn.LeakyReLU(negative_slope=0.2))
@@ -146,9 +123,6 @@ class GraphEncoder(nn.Module):
                             FFN(in_features=self.channels[i],hidden_features= self.channels[i] * 4,out_features=self.channels[i], act=act, drop_path=dpr[idx])
                             )]
         self.backbone = Seq(*self.backbone)
-
-        # Linear projection for common subspace in contrastive learning
-
         self.proj = nn.Conv2d(self.channels[-1], 1024, 1, bias=True)
     
     def model_init(self):
@@ -160,20 +134,10 @@ class GraphEncoder(nn.Module):
                     m.bias.data.zero_()
                     m.bias.requires_grad = True
     
-    def forward(self,x):
-        
-        """
-        Args:   
-        Inputs:
-            x: Input with shape (B,C,num_points)
-            
-        Outputs:
-            x: Output embedding with shape (B,emb_dim) # Batch,1024
-        """
-        
+    def forward(self, x):
+        """(B, C, N) -> (B, emb_dim)"""
         x = x.unsqueeze(-1)
-        
-        B, C,N,_ = x.shape
+        B, C, N, _ = x.shape
         x = self.stem(x)
 
         for i in range(len(self.backbone)):

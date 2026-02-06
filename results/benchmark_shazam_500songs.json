@@ -1,0 +1,1667 @@
+{
+  "shazam": {
+    "approach": "Shazam",
+    "n_db_songs": 1185,
+    "n_queries": 500,
+    "db_load_time_ms": 27306.47587776184,
+    "conditions": {
+      "clean_10s": {
+        "accuracy": 99.8,
+        "avg_confidence": 0.5138528412934621,
+        "avg_query_time_ms": 1266.9996415413916,
+        "correct": 499,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version).flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version)",
+            "predicted": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-10 Protect Ya Neck",
+            "score": 0.4105035283930717
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.8074831803962589,
+          "Extract spectrogram": 0.002161238081753254,
+          "Find peaks": 0.004611774202436208,
+          "Build hashes": 0.09853256164118647,
+          "Sample hashes": 0.013304966311901808,
+          "Hash matching and voting": 0.3360246400386095,
+          "Scoring preparation": 0.0012920842468738555,
+          "Softmax scoring": 0.00021765996888279914,
+          "Lookup": 9.123831987380981e-06,
+          "total": 1.2669996415413916
+        }
+      },
+      "clean_5s": {
+        "accuracy": 99.8,
+        "avg_confidence": 0.3689338691336897,
+        "avg_query_time_ms": 799.6006721705198,
+        "correct": 499,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow",
+            "predicted": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-05 Blow Remix (feat. Pharrell Williams)",
+            "score": 0.32070509878521924
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.5427868810556828,
+          "Extract spectrogram": 0.000745560199022293,
+          "Find peaks": 0.0023358421474695204,
+          "Build hashes": 0.048734516214579346,
+          "Sample hashes": 0.006684053279459476,
+          "Hash matching and voting": 0.19505148741975425,
+          "Scoring preparation": 0.0010527483969926834,
+          "Softmax scoring": 0.0005252566114068031,
+          "Lookup": 8.660543709993363e-06,
+          "total": 0.7996006721705198
+        }
+      },
+      "clean_3s": {
+        "accuracy": 100.0,
+        "avg_confidence": 0.2604614666680544,
+        "avg_query_time_ms": 646.2999290153384,
+        "correct": 500,
+        "total": 500,
+        "errors": [],
+        "avg_timings_per_step": {
+          "load_audio": 0.46407141362130644,
+          "Extract spectrogram": 0.0006394900009036064,
+          "Find peaks": 0.0014353460185229777,
+          "Build hashes": 0.028455512668937446,
+          "Sample hashes": 0.002813652951270342,
+          "Hash matching and voting": 0.14636487352848054,
+          "Scoring preparation": 0.0009253403805196285,
+          "Softmax scoring": 0.00020379174500703812,
+          "Lookup": 8.291866630315781e-06,
+          "total": 0.6462999290153384
+        }
+      },
+      "snr_10db": {
+        "accuracy": 97.8,
+        "avg_confidence": 0.3957111348677288,
+        "avg_query_time_ms": 933.3712010793388,
+        "correct": 489,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Bob Dylan - Highway 61 Revisited - 01-09 Desolation Row",
+            "score": 0.01313823941798542
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-09 Method Man.flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-09 Method Man",
+            "predicted": "Dr. Dre - The Chronic - 01-07 Lil' Ghetto Boy",
+            "score": 0.006729374031105628
+          },
+          {
+            "file": "Frank Ocean - Blonde - 01-01 Nikes-2.flac",
+            "expected": "Frank Ocean - Blonde - 01-01 Nikes-2",
+            "predicted": "James Brown - Star Time - 02-08 Let Yourself Go",
+            "score": 0.0018628302075301972
+          },
+          {
+            "file": "James Brown - Star Time - 04-08 Stoned To The Bone.flac",
+            "expected": "James Brown - Star Time - 04-08 Stoned To The Bone",
+            "predicted": "Fleetwood Mac - Rumours - 01-02 Dreams (2001 Remaster)",
+            "score": 0.024253752740212575
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro).flac",
+            "expected": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-10 Temporary Like Achilles",
+            "score": 0.00874459299937258
+          },
+          {
+            "file": "Kendrick Lamar - To Pimp A Butterfly - 01-05 These Walls.flac",
+            "expected": "Kendrick Lamar - To Pimp A Butterfly - 01-05 These Walls",
+            "predicted": "Fleetwood Mac - Rumours - 01-11 Gold Dust Woman (2001 Remaster)",
+            "score": 0.006374487753990965
+          },
+          {
+            "file": "Nirvana - Nevermind - 01-12 Something In The Way.flac",
+            "expected": "Nirvana - Nevermind - 01-12 Something In The Way",
+            "predicted": "Stevie Wonder - Songs In The Key Of Life - 02-08 Saturn",
+            "score": 0.0006696905638226003
+          },
+          {
+            "file": "Sly & The Family Stone - There's a Riot Goin' On - 01-04 Family Affair (Single Version).flac",
+            "expected": "Sly & The Family Stone - There's a Riot Goin' On - 01-04 Family Affair (Single Version)",
+            "predicted": "Stevie Wonder - Talking Book - 01-06 Superstition",
+            "score": 0.03172561234235527
+          },
+          {
+            "file": "Radiohead - Kid A - 01-02 Kid A.flac",
+            "expected": "Radiohead - Kid A - 01-02 Kid A",
+            "predicted": "Miles Davis - Bitches Brew - 02-04 Sanctuary (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.00540721983301462
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-04 Crew Love.flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-04 Crew Love",
+            "predicted": "Metallica - Master of Puppets (Remastered) - 01-03 The Thing That Should Not Be (Remastered)",
+            "score": 0.004334351020999216
+          },
+          {
+            "file": "Prince - Purple Rain - 01-02 Take Me with U.flac",
+            "expected": "Prince - Purple Rain - 01-02 Take Me with U",
+            "predicted": "Miles Davis - Kind Of Blue - 01-04 All Blues (feat. John Coltrane, Cannonball Adderley & Bill Evans)",
+            "score": 0.048607848478289695
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.4840714831165969,
+          "Extract spectrogram": 0.0010713319480419158,
+          "Find peaks": 0.004592285342514515,
+          "Build hashes": 0.09931114218011498,
+          "Sample hashes": 0.013215785209089517,
+          "Hash matching and voting": 0.3262781759314239,
+          "Scoring preparation": 0.001294633336365223,
+          "Softmax scoring": 0.0002102518416941166,
+          "Lookup": 8.870065212249756e-06,
+          "total": 0.9333712010793388
+        }
+      },
+      "snr_5db": {
+        "accuracy": 97.39999999999999,
+        "avg_confidence": 0.3443230308365668,
+        "avg_query_time_ms": 901.4617749117315,
+        "correct": 487,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Stevie Wonder - Songs In The Key Of Life - 02-09 Ebony Eyes.flac",
+            "expected": "Stevie Wonder - Songs In The Key Of Life - 02-09 Ebony Eyes",
+            "predicted": "Drake - Take Care (Deluxe) - 01-12 Cameras _ Good Ones Go Interlude (Medley)",
+            "score": 0.0031022138868208593
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-08 Chinese Arithmetic.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-08 Chinese Arithmetic",
+            "predicted": "Dr. Dre - The Chronic - 01-04 The Day The Niggaz Took Over",
+            "score": 0.0019655515973894255
+          },
+          {
+            "file": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-05 Never Said (2018 Remaster).flac",
+            "expected": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-05 Never Said (2018 Remaster)",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-11 European Son",
+            "score": 0.053220755631819605
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9).flac",
+            "expected": "Erykah Badu - Baduizm - 01-05 Sometimes (Mix #9)",
+            "predicted": "Nirvana - Nevermind - 01-13 Endless, Nameless",
+            "score": 0.004511432926090242
+          },
+          {
+            "file": "James Brown - Star Time - 01-16 Prisoner Of Love.flac",
+            "expected": "James Brown - Star Time - 01-16 Prisoner Of Love",
+            "predicted": "Stevie Wonder - Innervisions - 01-03 Living For The City",
+            "score": 0.014182986023460908
+          },
+          {
+            "file": "Neil Young - Harvest - 01-07 There's a World (2009 Remaster).flac",
+            "expected": "Neil Young - Harvest - 01-07 There's a World (2009 Remaster)",
+            "predicted": "Neil Young - Harvest - 01-10 Words (Between the Lines of Age) [2009 Remaster]",
+            "score": 0.003769686389874627
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-07 As The Rhyme Goes On.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-07 As The Rhyme Goes On",
+            "predicted": "Stevie Wonder - Songs In The Key Of Life - 01-04 Contusion",
+            "score": 0.002564803657089443
+          },
+          {
+            "file": "Chuck Berry - The Great Twenty-Eight - 01-03 You Can't Catch Me.flac",
+            "expected": "Chuck Berry - The Great Twenty-Eight - 01-03 You Can't Catch Me",
+            "predicted": "Drake - Take Care (Deluxe) - 01-12 Cameras _ Good Ones Go Interlude (Medley)",
+            "score": 0.005132608257639282
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-09 Get Em High.flac",
+            "expected": "Kanye West - The College Dropout - 01-09 Get Em High",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-06 Stuck Inside of Mobile with the Memphis Blues Again",
+            "score": 0.0033651191726888907
+          },
+          {
+            "file": "Kate Bush - Hounds Of Love - 01-02 Hounds Of Love.flac",
+            "expected": "Kate Bush - Hounds Of Love - 01-02 Hounds Of Love",
+            "predicted": "Drake - Take Care (Deluxe) - 01-12 Cameras _ Good Ones Go Interlude (Medley)",
+            "score": 0.0038825809353399965
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-11 The New Workout Plan.flac",
+            "expected": "Kanye West - The College Dropout - 01-11 The New Workout Plan",
+            "predicted": "Dr. Dre - The Chronic - 01-06 Deeez Nuuuts",
+            "score": 0.005000638360093013
+          },
+          {
+            "file": "Stevie Wonder - Innervisions - 01-04 Golden Lady.flac",
+            "expected": "Stevie Wonder - Innervisions - 01-04 Golden Lady",
+            "predicted": "Guns N' Roses - Appetite For Destruction - 01-02 It's So Easy",
+            "score": 0.0007387859007312869
+          },
+          {
+            "file": "Stevie Wonder - Songs In The Key Of Life - 02-05 If It's Magic.flac",
+            "expected": "Stevie Wonder - Songs In The Key Of Life - 02-05 If It's Magic",
+            "predicted": "Outkast - Aquemini - 01-03 Rosa Parks",
+            "score": 0.0032800857912932413
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.4628992414921522,
+          "Extract spectrogram": 0.0010674231871962547,
+          "Find peaks": 0.0045914996936917305,
+          "Build hashes": 0.09915037419646978,
+          "Sample hashes": 0.013187998369336129,
+          "Hash matching and voting": 0.3158274259418249,
+          "Scoring preparation": 0.0012862363867461681,
+          "Softmax scoring": 0.00020887844637036324,
+          "Lookup": 8.89042392373085e-06,
+          "total": 0.9014617749117315
+        }
+      },
+      "snr_0db": {
+        "accuracy": 87.4,
+        "avg_confidence": 0.2692059913686087,
+        "avg_query_time_ms": 869.7635816857219,
+        "correct": 437,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-15 Can You See Me.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-15 Can You See Me",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-11 European Son",
+            "score": 0.007752244286886811
+          },
+          {
+            "file": "JAY Z - Reasonable Doubt - 01-10 Friend Or Foe.flac",
+            "expected": "JAY Z - Reasonable Doubt - 01-10 Friend Or Foe",
+            "predicted": "The Clash - London Calling (Remastered) - 01-18 Revolution Rock (Remastered)",
+            "score": 0.0058897521993009905
+          },
+          {
+            "file": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-04 Getting Better (Remastered 2009).flac",
+            "expected": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-04 Getting Better (Remastered 2009)",
+            "predicted": "Talking Heads - Remain in Light - 01-03 The Great Curve",
+            "score": 0.0028329405446834155
+          },
+          {
+            "file": "Neil Young - Harvest - 01-02 Harvest (2009 Remaster).flac",
+            "expected": "Neil Young - Harvest - 01-02 Harvest (2009 Remaster)",
+            "predicted": "Missy Elliott - Supa Dupa Fly - 01-05 Beep Me 911 (feat. 702)",
+            "score": 0.005204229616453726
+          },
+          {
+            "file": "N.W.A - Straight Outta Compton - 01-04 If It Ain't Ruff.flac",
+            "expected": "N.W.A - Straight Outta Compton - 01-04 If It Ain't Ruff",
+            "predicted": "James Brown - Star Time - 04-03 Get On The Good Foot (Single Version _ Mono)",
+            "score": 0.0031513245844505544
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-10 Workout Plan.flac",
+            "expected": "Kanye West - The College Dropout - 01-10 Workout Plan",
+            "predicted": "The Who - Who's Next - 01-10 Pure And Easy (New York Record Plant Session)",
+            "score": 0.002904942305419489
+          },
+          {
+            "file": "Prince - Sign O' The Times - 01-09 Forever In My Life (2020 Remaster).flac",
+            "expected": "Prince - Sign O' The Times - 01-09 Forever In My Life (2020 Remaster)",
+            "predicted": "Michael Jackson - Thriller - 01-09 The Lady in My Life",
+            "score": 0.015311718187335233
+          },
+          {
+            "file": "The Who - Who's Next - 01-04 My Wife.flac",
+            "expected": "The Who - Who's Next - 01-04 My Wife",
+            "predicted": "A Tribe Called Quest - The Low End Theory - 01-06 Show Business (feat. Diamond D, Lord Jamar & Sadat X)",
+            "score": 0.007954586505589112
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version).flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version)",
+            "predicted": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-10 Protect Ya Neck",
+            "score": 0.3791678114652819
+          },
+          {
+            "file": "James Brown - Star Time - 03-14 King Heroin.flac",
+            "expected": "James Brown - Star Time - 03-14 King Heroin",
+            "predicted": "The Who - Who's Next - 01-05 The Song Is Over",
+            "score": 0.011241473842762084
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-03 Headlines (Explicit Version).flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-03 Headlines (Explicit Version)",
+            "predicted": "Stevie Wonder - Innervisions - 01-09 He's Misstra Know-It-All",
+            "score": 0.001899736913981931
+          },
+          {
+            "file": "Outkast - Stankonia - 01-04 So Fresh, So Clean.flac",
+            "expected": "Outkast - Stankonia - 01-04 So Fresh, So Clean",
+            "predicted": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-18 Strange Loop (2018 Remaster)",
+            "score": 0.0035575741724176435
+          },
+          {
+            "file": "Michael Jackson - Off the Wall - 01-08 I Can't Help It.flac",
+            "expected": "Michael Jackson - Off the Wall - 01-08 I Can't Help It",
+            "predicted": "Michael Jackson - Off the Wall - 01-01 Don't Stop 'Til You Get Enough",
+            "score": 0.00031409830317774556
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-06 Standing on the Sun Remix (feat. Mr. Vegas).flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-06 Standing on the Sun Remix (feat. Mr. Vegas)",
+            "predicted": "The Beatles - Revolver (Remastered) - 01-03 I'm Only Sleeping (Remastered 2009)",
+            "score": 0.01176778632579234
+          },
+          {
+            "file": "D'Angelo - Voodoo - 01-09 Spanish Joint.flac",
+            "expected": "D'Angelo - Voodoo - 01-09 Spanish Joint",
+            "predicted": "James Brown - James Brown Live At The Apollo, 1962 - 01-09 Lost Someone (Live At The Apollo Theater, 1962)",
+            "score": 0.004851772362751583
+          },
+          {
+            "file": "Radiohead - Kid A - 01-09 Morning Bell.flac",
+            "expected": "Radiohead - Kid A - 01-09 Morning Bell",
+            "predicted": "Nirvana - Nevermind - 01-02 In Bloom",
+            "score": 0.01335299704533166
+          },
+          {
+            "file": "James Brown - Star Time - 01-03 Try Me (Single Version _ Mono).flac",
+            "expected": "James Brown - Star Time - 01-03 Try Me (Single Version _ Mono)",
+            "predicted": "Michael Jackson - Thriller - 01-03 The Girl Is Mine (with Paul McCartney)",
+            "score": 0.0019325910830564341
+          },
+          {
+            "file": "Neil Young - Harvest - 01-07 There's a World (2009 Remaster).flac",
+            "expected": "Neil Young - Harvest - 01-07 There's a World (2009 Remaster)",
+            "predicted": "The Beatles - Revolver (Remastered) - 01-04 Love You To (Remastered 2009)",
+            "score": 0.008558104208582384
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-05 No Angel.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-05 No Angel",
+            "predicted": "James Brown - Star Time - 02-10 Get It Together (Pt.1 & 2)",
+            "score": 0.002494219599052716
+          },
+          {
+            "file": "Stevie Wonder - Innervisions - 01-05 Higher Ground.flac",
+            "expected": "Stevie Wonder - Innervisions - 01-05 Higher Ground",
+            "predicted": "Erykah Badu - Baduizm - 01-13 Certainly (Flipped It)",
+            "score": 0.0018997427229296981
+          },
+          {
+            "file": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-13 A Day In The Life (Remastered 2009).flac",
+            "expected": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-13 A Day In The Life (Remastered 2009)",
+            "predicted": "Jimi Hendrix - Are You Experienced - 01-11 Are You Experienced_",
+            "score": 0.004432544011458983
+          },
+          {
+            "file": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-01 Intro.flac",
+            "expected": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-01 Intro",
+            "predicted": "Nirvana - Nevermind - 01-02 In Bloom",
+            "score": 0.009771479720254161
+          },
+          {
+            "file": "Ramones - Ramones - 01-08 Loudmouth.flac",
+            "expected": "Ramones - Ramones - 01-08 Loudmouth",
+            "predicted": "Joni Mitchell - Blue - 01-05 Blue",
+            "score": 0.0026618911343826435
+          },
+          {
+            "file": "The Rolling Stones - Let It Bleed - 01-03 Country Honk.flac",
+            "expected": "The Rolling Stones - Let It Bleed - 01-03 Country Honk",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-15 All Down The Line",
+            "score": 0.0026456540841023335
+          },
+          {
+            "file": "D'Angelo - Voodoo - 01-05 Send It On.flac",
+            "expected": "D'Angelo - Voodoo - 01-05 Send It On",
+            "predicted": "Outkast - Aquemini - 01-07 Slump",
+            "score": 0.007856204241187825
+          },
+          {
+            "file": "Kate Bush - Hounds Of Love - 01-02 Hounds Of Love.flac",
+            "expected": "Kate Bush - Hounds Of Love - 01-02 Hounds Of Love",
+            "predicted": "Patti Smith - Horses - 01-06 Break It Up",
+            "score": 0.003953870095601553
+          },
+          {
+            "file": "A Tribe Called Quest - The Low End Theory - 01-11 Jazz (We've Got).flac",
+            "expected": "A Tribe Called Quest - The Low End Theory - 01-11 Jazz (We've Got)",
+            "predicted": "Stevie Wonder - Songs In The Key Of Life - 02-01 Isn't She Lovely",
+            "score": 0.002049403610012046
+          },
+          {
+            "file": "Nirvana - Nevermind - 01-12 Something In The Way.flac",
+            "expected": "Nirvana - Nevermind - 01-12 Something In The Way",
+            "predicted": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-05 Fixing A Hole (Remastered 2009)",
+            "score": 0.0018279799905891458
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-04 The Rain (Supa Dupa Fly).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-04 The Rain (Supa Dupa Fly)",
+            "predicted": "The Band - The Band - 01-06 Whispering Pines",
+            "score": 0.0008739365564993662
+          },
+          {
+            "file": "Kendrick Lamar - To Pimp A Butterfly - 01-13 The Blacker The Berry.flac",
+            "expected": "Kendrick Lamar - To Pimp A Butterfly - 01-13 The Blacker The Berry",
+            "predicted": "JAY Z - The Blueprint (Explicit Version) - 01-08 Heart Of The City (Ain't No Love)",
+            "score": 0.009695865624722244
+          },
+          {
+            "file": "Carole King - Tapestry - 01-12 (You Make Me Feel Like) A Natural Woman.flac",
+            "expected": "Carole King - Tapestry - 01-12 (You Make Me Feel Like) A Natural Woman",
+            "predicted": "James Brown - Star Time - 03-05 Talkin' Loud And Sayin' Nothing (Extended Version)",
+            "score": 0.016919920174202963
+          },
+          {
+            "file": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-03 Gimme the Loot (2005 Remaster).flac",
+            "expected": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-03 Gimme the Loot (2005 Remaster)",
+            "predicted": "Guns N' Roses - Appetite For Destruction - 01-02 It's So Easy",
+            "score": 0.003983222802341535
+          },
+          {
+            "file": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-02 Graceland.flac",
+            "expected": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-02 Graceland",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.18384764662301378
+          },
+          {
+            "file": "James Brown - Star Time - 01-07 I'll Go Crazy.flac",
+            "expected": "James Brown - Star Time - 01-07 I'll Go Crazy",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-10 Happy",
+            "score": 0.0016715368240141082
+          },
+          {
+            "file": "Pink Floyd - The Dark Side of the Moon - 01-03 On the Run.flac",
+            "expected": "Pink Floyd - The Dark Side of the Moon - 01-03 On the Run",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-07 Leopard-Skin Pill-Box Hat",
+            "score": 0.002247238729803591
+          },
+          {
+            "file": "A Tribe Called Quest - The Low End Theory - 01-10 Everything Is Fair.flac",
+            "expected": "A Tribe Called Quest - The Low End Theory - 01-10 Everything Is Fair",
+            "predicted": "Jimi Hendrix - Are You Experienced - 01-01 Purple Haze",
+            "score": 0.0031504919603556614
+          },
+          {
+            "file": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-01 Intro (2005 Remaster).flac",
+            "expected": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-01 Intro (2005 Remaster)",
+            "predicted": "Fleetwood Mac - Rumours - 01-02 Dreams (2001 Remaster)",
+            "score": 0.04420486954621827
+          },
+          {
+            "file": "Stevie Wonder - Songs In The Key Of Life - 02-10 All Day Sucker.flac",
+            "expected": "Stevie Wonder - Songs In The Key Of Life - 02-10 All Day Sucker",
+            "predicted": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-05 Warning (2005 Remaster)",
+            "score": 0.04068974036973416
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-02 Hit 'Em wit da Hee (feat. Lil' Kim).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-02 Hit 'Em wit da Hee (feat. Lil' Kim)",
+            "predicted": "Alanis Morissette - Jagged Little Pill - 01-01 All I Really Want",
+            "score": 0.0005203708432615084
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-02 Bring The Noise.flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-02 Bring The Noise",
+            "predicted": "The Beatles - Revolver (Remastered) - 01-11 Doctor Robert (Remastered 2009)",
+            "score": 0.00855649506614109
+          },
+          {
+            "file": "Dr. Dre - The Chronic - 01-04 The Day The Niggaz Took Over.flac",
+            "expected": "Dr. Dre - The Chronic - 01-04 The Day The Niggaz Took Over",
+            "predicted": "Bob Dylan - Blood On The Tracks - 01-06 Meet Me in the Morning",
+            "score": 0.003531877990863852
+          },
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-11 Are You Experienced_.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-11 Are You Experienced_",
+            "predicted": "Alanis Morissette - Jagged Little Pill - 01-12 Wake Up",
+            "score": 0.027228302033769247
+          },
+          {
+            "file": "Radiohead - OK Computer - 01-03 Subterranean Homesick Alien-2.flac",
+            "expected": "Radiohead - OK Computer - 01-03 Subterranean Homesick Alien-2",
+            "predicted": "Stevie Wonder - Innervisions - 01-02 Visions",
+            "score": 0.022331692066267395
+          },
+          {
+            "file": "Chuck Berry - The Great Twenty-Eight - 01-08 School Day (Ring Ring Goes The Bell).flac",
+            "expected": "Chuck Berry - The Great Twenty-Eight - 01-08 School Day (Ring Ring Goes The Bell)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-10 Temporary Like Achilles",
+            "score": 0.008700260168223228
+          },
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-06 I Don't Live Today.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-06 I Don't Live Today",
+            "predicted": "The Beatles - Revolver (Remastered) - 01-05 Here, There And Everywhere (Remastered 2009)",
+            "score": 0.0025226508229383438
+          },
+          {
+            "file": "The Beatles - Rubber Soul (Remastered 2009) - 01-08 What Goes On (Remastered 2009).flac",
+            "expected": "The Beatles - Rubber Soul (Remastered 2009) - 01-08 What Goes On (Remastered 2009)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-01 ...And the Gods Made Love",
+            "score": 0.008654514007238823
+          },
+          {
+            "file": "Jimi Hendrix - Electric Ladyland - 01-11 1983...(A Merman I Should Turn to Be).flac",
+            "expected": "Jimi Hendrix - Electric Ladyland - 01-11 1983...(A Merman I Should Turn to Be)",
+            "predicted": "Miles Davis - Bitches Brew - 01-02 Bitches Brew (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.029798142665841687
+          },
+          {
+            "file": "The Beatles - Rubber Soul (Remastered 2009) - 01-09 Girl (Remastered 2009).flac",
+            "expected": "The Beatles - Rubber Soul (Remastered 2009) - 01-09 Girl (Remastered 2009)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-01 ...And the Gods Made Love",
+            "score": 0.008206123157903478
+          },
+          {
+            "file": "James Brown - Star Time - 04-02 Public Enemy #1 (Pt. 1).flac",
+            "expected": "James Brown - Star Time - 04-02 Public Enemy #1 (Pt. 1)",
+            "predicted": "Bob Dylan - Highway 61 Revisited - 01-03 It Takes a Lot to Laugh, It Takes a Train to Cry",
+            "score": 0.00524580273233477
+          },
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-13 Koka Kola (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-13 Koka Kola (Remastered)",
+            "predicted": "Miles Davis - Bitches Brew - 01-02 Bitches Brew (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.007817672917067031
+          },
+          {
+            "file": "The Beatles - Abbey Road (Remastered) - 01-14 Golden Slumbers (Remastered 2009).flac",
+            "expected": "The Beatles - Abbey Road (Remastered) - 01-14 Golden Slumbers (Remastered 2009)",
+            "predicted": "Bruce Springsteen - Born To Run - 01-04 Backstreets",
+            "score": 0.0004933593430934691
+          },
+          {
+            "file": "Michael Jackson - Thriller - 01-07 Human Nature.flac",
+            "expected": "Michael Jackson - Thriller - 01-07 Human Nature",
+            "predicted": "James Brown - Star Time - 03-12 Intro_ It's A New Day (So Let A Man Come In And Do The Popcorn) (Live At The Apollo Theater_1971)",
+            "score": 0.02063805130244467
+          },
+          {
+            "file": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-17 Who Shot Ya_ (2005 Remaster).flac",
+            "expected": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-17 Who Shot Ya_ (2005 Remaster)",
+            "predicted": "Jimi Hendrix - Axis_ Bold As Love - 01-11 One Rainy Wish",
+            "score": 0.007107400507158523
+          },
+          {
+            "file": "The Beatles - Rubber Soul (Remastered 2009) - 01-10 I'm Looking Through You (Remastered 2009).flac",
+            "expected": "The Beatles - Rubber Soul (Remastered 2009) - 01-10 I'm Looking Through You (Remastered 2009)",
+            "predicted": "Outkast - Aquemini - 01-09 Da Art of Storytellin' (Pt. 1)",
+            "score": 0.006637816803969465
+          },
+          {
+            "file": "Bob Dylan - Blood On The Tracks - 01-02 Simple Twist of Fate.flac",
+            "expected": "Bob Dylan - Blood On The Tracks - 01-02 Simple Twist of Fate",
+            "predicted": "The Doors - The Doors - 01-11 The End",
+            "score": 0.005644326560696689
+          },
+          {
+            "file": "Dusty Springfield - Dusty In Memphis - 01-09 In the Land of Make Believe.flac",
+            "expected": "Dusty Springfield - Dusty In Memphis - 01-09 In the Land of Make Believe",
+            "predicted": "Miles Davis - Bitches Brew - 02-04 Sanctuary (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.0022502225323326464
+          },
+          {
+            "file": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-05 Doo Wop (That Thing).flac",
+            "expected": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-05 Doo Wop (That Thing)",
+            "predicted": "Bruce Springsteen - Born To Run - 01-04 Backstreets",
+            "score": 0.004003579907487342
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-01 Sunday Morning",
+            "score": 0.002799480430523582
+          },
+          {
+            "file": "Steely Dan - Aja - 01-01 Black Cow.flac",
+            "expected": "Steely Dan - Aja - 01-01 Black Cow",
+            "predicted": "Bruce Springsteen - Born To Run - 01-08 Jungleland",
+            "score": 0.006083378616712487
+          },
+          {
+            "file": "The Beach Boys - Pet Sounds - 01-07 Sloop John B.flac",
+            "expected": "The Beach Boys - Pet Sounds - 01-07 Sloop John B",
+            "predicted": "Led Zeppelin - Led Zeppelin IV (Remaster) - 01-04 Stairway to Heaven (Remaster)",
+            "score": 0.002823201379184681
+          },
+          {
+            "file": "Michael Jackson - Off the Wall - 01-07 She's Out of My Life.flac",
+            "expected": "Michael Jackson - Off the Wall - 01-07 She's Out of My Life",
+            "predicted": "Miles Davis - Kind Of Blue - 01-05 Flamenco Sketches (feat. John Coltrane, Cannonball Adderley & Bill Evans)",
+            "score": 0.005710857883707066
+          },
+          {
+            "file": "Beyonce\u0301 - RENAISSANCE - 01-12 THIQUE.flac",
+            "expected": "Beyonce\u0301 - RENAISSANCE - 01-12 THIQUE",
+            "predicted": "Neil Young - Harvest - 01-06 Old Man (2009 Remaster)",
+            "score": 0.008393196912173329
+          },
+          {
+            "file": "Carole King - Tapestry - 01-01 I Feel the Earth Move.flac",
+            "expected": "Carole King - Tapestry - 01-01 I Feel the Earth Move",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-14 Sad-Eyed Lady of the Lowlands",
+            "score": 0.0020754227270525227
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.44694274897128344,
+          "Extract spectrogram": 0.001064401164650917,
+          "Find peaks": 0.004589909482747317,
+          "Build hashes": 0.09913409353420138,
+          "Sample hashes": 0.013236353311687708,
+          "Hash matching and voting": 0.3001847560852766,
+          "Scoring preparation": 0.0012550401724874974,
+          "Softmax scoring": 0.0002151591032743454,
+          "Lookup": 8.910391479730605e-06,
+          "total": 0.8697635816857219
+        }
+      },
+      "ir_10s": {
+        "accuracy": 91.0,
+        "avg_confidence": 0.12289130191389878,
+        "avg_query_time_ms": 903.3683231547475,
+        "correct": 455,
+        "total": 500,
+        "errors": [
+          {
+            "file": "Frank Ocean - Blonde - 01-05 Solo-2.flac",
+            "expected": "Frank Ocean - Blonde - 01-05 Solo-2",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-10 Rainy Day, Dream Away",
+            "score": 0.001051315028160471
+          },
+          {
+            "file": "Outkast - Stankonia - 01-06 Snappin' & Trappin' (feat. Killer Mike & J-Sweet).flac",
+            "expected": "Outkast - Stankonia - 01-06 Snappin' & Trappin' (feat. Killer Mike & J-Sweet)",
+            "predicted": "Miles Davis - Bitches Brew - 01-01 Pharaoh's Dance",
+            "score": 0.002814417847359363
+          },
+          {
+            "file": "Aretha Franklin - I Never Loved a Man the Way I Love You - 01-02 Drown in My Own Tears.flac",
+            "expected": "Aretha Franklin - I Never Loved a Man the Way I Love You - 01-02 Drown in My Own Tears",
+            "predicted": "D'Angelo - Voodoo - 01-05 Send It On",
+            "score": 0.013400875118553923
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-10 Extended Beat.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-10 Extended Beat",
+            "predicted": "The Beatles - Rubber Soul (Remastered 2009) - 01-03 You Won't See Me (Remastered 2009)",
+            "score": 0.007940552117980282
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-08 Chinese Arithmetic.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-08 Chinese Arithmetic",
+            "predicted": "The Beatles - Rubber Soul (Remastered 2009) - 01-09 Girl (Remastered 2009)",
+            "score": 0.0008636284653523729
+          },
+          {
+            "file": "Steely Dan - Aja - 01-06 I Got The News.flac",
+            "expected": "Steely Dan - Aja - 01-06 I Got The News",
+            "predicted": "Marvin Gaye - What's Going On - 01-09 Inner City Blues (Make Me Wanna Holler)",
+            "score": 0.005226011711336964
+          },
+          {
+            "file": "Sex Pistols - Never Mind The Bollocks, Here's The Sex Pistols - 01-07 Seventeen.flac",
+            "expected": "Sex Pistols - Never Mind The Bollocks, Here's The Sex Pistols - 01-07 Seventeen",
+            "predicted": "Marvin Gaye - What's Going On - 01-10 God Is Love (Mono Single Version)",
+            "score": 0.001082435930785719
+          },
+          {
+            "file": "The Stooges - Funhouse - 01-03 T.V. Eye.flac",
+            "expected": "The Stooges - Funhouse - 01-03 T.V. Eye",
+            "predicted": "The Rolling Stones - Let It Bleed - 01-06 Midnight Rambler",
+            "score": 0.022923758364964186
+          },
+          {
+            "file": "Bruce Springsteen - Born To Run - 01-02 Tenth Avenue Freeze-Out.flac",
+            "expected": "Bruce Springsteen - Born To Run - 01-02 Tenth Avenue Freeze-Out",
+            "predicted": "Metallica - Master of Puppets (Remastered) - 01-02 Master of Puppets (Remastered)",
+            "score": 0.01004132894685894
+          },
+          {
+            "file": "D'Angelo - Voodoo - 01-12 Untitled (How Does It Feel).flac",
+            "expected": "D'Angelo - Voodoo - 01-12 Untitled (How Does It Feel)",
+            "predicted": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.010009250796406466
+          },
+          {
+            "file": "Talking Heads - Remain in Light - 01-07 Listening Wind.flac",
+            "expected": "Talking Heads - Remain in Light - 01-07 Listening Wind",
+            "predicted": "James Brown - Star Time - 04-13 Bodyheat (Pt.1 _ Single Version)",
+            "score": 0.005470859588904142
+          },
+          {
+            "file": "The Stooges - Funhouse - 01-02 Loose.flac",
+            "expected": "The Stooges - Funhouse - 01-02 Loose",
+            "predicted": "Miles Davis - Bitches Brew - 02-04 Sanctuary (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.00870193213886783
+          },
+          {
+            "file": "The Stooges - Funhouse - 01-07 L.A. Blues.flac",
+            "expected": "The Stooges - Funhouse - 01-07 L.A. Blues",
+            "predicted": "The Doors - The Doors - 01-02 Soul Kitchen",
+            "score": 0.004310038936896965
+          },
+          {
+            "file": "Neil Young - Harvest - 01-02 Harvest (2009 Remaster).flac",
+            "expected": "Neil Young - Harvest - 01-02 Harvest (2009 Remaster)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-17 The Story of _Graceland_ as Told by Paul Simon",
+            "score": 0.0013554996996940627
+          },
+          {
+            "file": "The Band - The Band - 01-07 Jemima Surrender.flac",
+            "expected": "The Band - The Band - 01-07 Jemima Surrender",
+            "predicted": "Bob Dylan - Blood On The Tracks - 01-07 Lily, Rosemary and the Jack of Hearts",
+            "score": 0.0024554108781531525
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version).flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version)",
+            "predicted": "Patti Smith - Horses - 01-08 Elegie",
+            "score": 0.006207364781032787
+          },
+          {
+            "file": "James Brown - James Brown Live At The Apollo, 1962 - 01-09 Lost Someone (Live At The Apollo Theater, 1962).flac",
+            "expected": "James Brown - James Brown Live At The Apollo, 1962 - 01-09 Lost Someone (Live At The Apollo Theater, 1962)",
+            "predicted": "Led Zeppelin - Led Zeppelin IV (Remaster) - 01-04 Stairway to Heaven (Remaster)",
+            "score": 0.004482367243238583
+          },
+          {
+            "file": "Aretha Franklin - Lady Soul - 01-08 Come Back Baby.flac",
+            "expected": "Aretha Franklin - Lady Soul - 01-08 Come Back Baby",
+            "predicted": "JAY Z - The Blueprint (Explicit Version) - 01-08 Heart Of The City (Ain't No Love)",
+            "score": 0.0036415445914428357
+          },
+          {
+            "file": "Beyonce\u0301 - RENAISSANCE - 01-14 AMERICA HAS A PROBLEM.flac",
+            "expected": "Beyonce\u0301 - RENAISSANCE - 01-14 AMERICA HAS A PROBLEM",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-08 Just Like a Woman",
+            "score": 0.0011739240995026767
+          },
+          {
+            "file": "Marvin Gaye - What's Going On - 01-12 What's Going On (Mono Single Version).flac",
+            "expected": "Marvin Gaye - What's Going On - 01-12 What's Going On (Mono Single Version)",
+            "predicted": "Patti Smith - Horses - 01-07 Land_ Horses _ Land of a Thousand Dances _ La Mer(de)",
+            "score": 0.002744637284182727
+          },
+          {
+            "file": "James Brown - Star Time - 02-06 Don't Be A Dropout.flac",
+            "expected": "James Brown - Star Time - 02-06 Don't Be A Dropout",
+            "predicted": "Miles Davis - Bitches Brew - 02-04 Sanctuary (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.009904469706718433
+          },
+          {
+            "file": "James Brown - Star Time - 02-12 I Got The Feelin'.flac",
+            "expected": "James Brown - Star Time - 02-12 I Got The Feelin'",
+            "predicted": "James Brown - Star Time - 03-12 Intro_ It's A New Day (So Let A Man Come In And Do The Popcorn) (Live At The Apollo Theater_1971)",
+            "score": 0.003015769795516987
+          },
+          {
+            "file": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro).flac",
+            "expected": "Erykah Badu - Baduizm - 01-01 Rim Shot (Intro)",
+            "predicted": "James Brown - James Brown Live At The Apollo, 1962 - 01-09 Lost Someone (Live At The Apollo Theater, 1962)",
+            "score": 0.04306536862891841
+          },
+          {
+            "file": "The Doors - The Doors - 01-06 Light My Fire.flac",
+            "expected": "The Doors - The Doors - 01-06 Light My Fire",
+            "predicted": "R.E.M. - Automatic For The People - 01-05 New Orleans Instrumental No. 1",
+            "score": 0.007045891615275912
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-04 I Know You Got Soul.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-04 I Know You Got Soul",
+            "predicted": "Miles Davis - Bitches Brew - 02-02 John McLaughlin (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.013396634521846473
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj).flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 02-02 Flawless Remix (feat. Nicki Minaj)",
+            "predicted": "Bob Dylan - Highway 61 Revisited - 01-08 Just Like Tom Thumb's Blues",
+            "score": 0.0038250627022868855
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-10 She Watch Channel Zero_!.flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-10 She Watch Channel Zero_!",
+            "predicted": "R.E.M. - Automatic For The People - 01-09 Star Me Kitten",
+            "score": 0.0028608592251166964
+          },
+          {
+            "file": "Alanis Morissette - Jagged Little Pill - 01-07 You Learn.flac",
+            "expected": "Alanis Morissette - Jagged Little Pill - 01-07 You Learn",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-11 1983...(A Merman I Should Turn to Be)",
+            "score": 0.012117587708530775
+          },
+          {
+            "file": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-13 A Day In The Life (Remastered 2009).flac",
+            "expected": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-13 A Day In The Life (Remastered 2009)",
+            "predicted": "John Lennon - Plastic Ono Band - 01-02 Hold On (Remastered 2010)",
+            "score": 0.0024328083135668477
+          },
+          {
+            "file": "Aretha Franklin - I Never Loved a Man the Way I Love You - 01-10 Save Me.flac",
+            "expected": "Aretha Franklin - I Never Loved a Man the Way I Love You - 01-10 Save Me",
+            "predicted": "Bob Dylan - Highway 61 Revisited - 01-01 Like a Rolling Stone",
+            "score": 0.001686406732411716
+          },
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-14 The Card Cheat (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-14 The Card Cheat (Remastered)",
+            "predicted": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.01411351884292189
+          },
+          {
+            "file": "The Doors - The Doors - 01-03 The Crystal Ship.flac",
+            "expected": "The Doors - The Doors - 01-03 The Crystal Ship",
+            "predicted": "Erykah Badu - Baduizm - 01-10 No Love",
+            "score": 0.01815083422997088
+          },
+          {
+            "file": "Prince - Purple Rain - 01-01 Let's Go Crazy.flac",
+            "expected": "Prince - Purple Rain - 01-01 Let's Go Crazy",
+            "predicted": "Drake - Take Care (Deluxe) - 01-19 The Motto",
+            "score": 0.003297237251414731
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-08 Bite Our Style (Interlude).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-08 Bite Our Style (Interlude)",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-01 Rocks Off",
+            "score": 0.0014382464032117737
+          },
+          {
+            "file": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-01 Intro (2005 Remaster).flac",
+            "expected": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-01 Intro (2005 Remaster)",
+            "predicted": "Bob Dylan - Highway 61 Revisited - 01-03 It Takes a Lot to Laugh, It Takes a Train to Cry",
+            "score": 0.004823895658081945
+          },
+          {
+            "file": "James Brown - Star Time - 04-01 There It Is (Pt. 1).flac",
+            "expected": "James Brown - Star Time - 04-01 There It Is (Pt. 1)",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-03 I Know What I Know (with General M.D.Shirinda & The Gaza Sisters)",
+            "score": 0.009482421017273479
+          },
+          {
+            "file": "Radiohead - OK Computer - 01-06 Karma Police-2.flac",
+            "expected": "Radiohead - OK Computer - 01-06 Karma Police-2",
+            "predicted": "Pink Floyd - The Dark Side of the Moon - 01-04 Time",
+            "score": 0.01372042826995945
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-01 Rocks Off.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-01 Rocks Off",
+            "predicted": "The Stooges - Funhouse - 01-06 Fun House",
+            "score": 0.002760477142904394
+          },
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-11 Are You Experienced_.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-11 Are You Experienced_",
+            "predicted": "Jimi Hendrix - Are You Experienced - 01-03 Hey Joe",
+            "score": 0.00972490582649832
+          },
+          {
+            "file": "Talking Heads - Remain in Light - 01-03 The Great Curve.flac",
+            "expected": "Talking Heads - Remain in Light - 01-03 The Great Curve",
+            "predicted": "David Bowie - Hunky Dory (2015 Remaster) - 01-11 The Bewlay Brothers (2015 Remaster)",
+            "score": 0.0015892514171346184
+          },
+          {
+            "file": "Aretha Franklin - Lady Soul - 01-07 Good to Me as I Am to You.flac",
+            "expected": "Aretha Franklin - Lady Soul - 01-07 Good to Me as I Am to You",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-02 Pledging My Time",
+            "score": 0.013892833733050614
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-07 Pass da Blunt (feat. Timbaland).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-07 Pass da Blunt (feat. Timbaland)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-07 Come On (Let the Good Times Roll)",
+            "score": 0.0019887449529145673
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor",
+            "predicted": "Chuck Berry - The Great Twenty-Eight - 01-04 Too Much Monkey Business",
+            "score": 0.005817267418510741
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow",
+            "predicted": "Miles Davis - Bitches Brew - 02-03 Miles Runs the Voodoo Down (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.0015547214396699482
+          },
+          {
+            "file": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-15 Johnny Sunshine (2018 Remaster).flac",
+            "expected": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-15 Johnny Sunshine (2018 Remaster)",
+            "predicted": "David Bowie - Hunky Dory (2015 Remaster) - 01-09 Song for Bob Dylan (2015 Remaster)",
+            "score": 0.006016961896617046
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.45761347787454726,
+          "Extract spectrogram": 0.0009597556143999099,
+          "Find peaks": 0.004574127424508333,
+          "Build hashes": 0.09927793788909912,
+          "Sample hashes": 0.01294333952665329,
+          "Hash matching and voting": 0.3232938447147608,
+          "Scoring preparation": 0.0012988172508776189,
+          "Softmax scoring": 0.0002080620191991329,
+          "Lookup": 9.265191853046418e-06,
+          "total": 0.9033683231547475
+        }
+      },
+      "ir_snr_5db": {
+        "accuracy": 80.4,
+        "avg_confidence": 0.08520403403940752,
+        "avg_query_time_ms": 861.8024819158018,
+        "correct": 402,
+        "total": 500,
+        "errors": [
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-08 Lost in the Supermarket (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-08 Lost in the Supermarket (Remastered)",
+            "predicted": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-14 Method Man (Home Grown Version)",
+            "score": 0.005570533285909507
+          },
+          {
+            "file": "Outkast - Stankonia - 01-06 Snappin' & Trappin' (feat. Killer Mike & J-Sweet).flac",
+            "expected": "Outkast - Stankonia - 01-06 Snappin' & Trappin' (feat. Killer Mike & J-Sweet)",
+            "predicted": "Bob Dylan - Blood On The Tracks - 01-02 Simple Twist of Fate",
+            "score": 0.003695482847038467
+          },
+          {
+            "file": "Stevie Wonder - Songs In The Key Of Life - 02-09 Ebony Eyes.flac",
+            "expected": "Stevie Wonder - Songs In The Key Of Life - 02-09 Ebony Eyes",
+            "predicted": "Stevie Wonder - Innervisions - 01-04 Golden Lady",
+            "score": 0.013748142771483285
+          },
+          {
+            "file": "Prince - Sign O' The Times - 02-06 It's Gonna Be A Beautiful Night (2020 Remaster).flac",
+            "expected": "Prince - Sign O' The Times - 02-06 It's Gonna Be A Beautiful Night (2020 Remaster)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-01 ...And the Gods Made Love",
+            "score": 0.0016927387113974124
+          },
+          {
+            "file": "Outkast - Stankonia - 01-12 Xplosion (feat. B-Real).flac",
+            "expected": "Outkast - Stankonia - 01-12 Xplosion (feat. B-Real)",
+            "predicted": "James Brown - Star Time - 02-06 Don't Be A Dropout",
+            "score": 0.003001871368499609
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-08 Chinese Arithmetic.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-08 Chinese Arithmetic",
+            "predicted": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-18 Strange Loop (2018 Remaster)",
+            "score": 0.008235187882651318
+          },
+          {
+            "file": "Sex Pistols - Never Mind The Bollocks, Here's The Sex Pistols - 01-08 Anarchy in the U.K..flac",
+            "expected": "Sex Pistols - Never Mind The Bollocks, Here's The Sex Pistols - 01-08 Anarchy in the U.K.",
+            "predicted": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-12 Sgt. Pepper's Lonely Hearts Club Band (Reprise _ Remastered 2009)",
+            "score": 0.008720855127599347
+          },
+          {
+            "file": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-05 Never Said (2018 Remaster).flac",
+            "expected": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-05 Never Said (2018 Remaster)",
+            "predicted": "Outkast - Aquemini - 01-01 Hold On, Be Strong",
+            "score": 0.005647143874864424
+          },
+          {
+            "file": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971).flac",
+            "expected": "James Brown - Star Time - 03-08 Medley_ Brother Rapp_Ain't It Funky Now (Live At Olympia Theatre, Paris, France _ 1971)",
+            "predicted": "The Who - Who's Next - 01-12 Naked Eye (Live)",
+            "score": 0.01647056029436733
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-19 The Motto.flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-19 The Motto",
+            "predicted": "The Clash - London Calling (Remastered) - 01-18 Revolution Rock (Remastered)",
+            "score": 0.005114880529030086
+          },
+          {
+            "file": "Stevie Wonder - Talking Book - 01-08 Blame It On The Sun.flac",
+            "expected": "Stevie Wonder - Talking Book - 01-08 Blame It On The Sun",
+            "predicted": "Michael Jackson - Off the Wall - 01-08 I Can't Help It",
+            "score": 0.023694822916266012
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-08 Never Let Me Down.flac",
+            "expected": "Kanye West - The College Dropout - 01-08 Never Let Me Down",
+            "predicted": "Ms. Lauryn Hill & D'Angelo - The Miseducation of Lauryn Hill - 01-12 Nothing Even Matters (feat. D'Angelo)",
+            "score": 0.006469583180939487
+          },
+          {
+            "file": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-04 Getting Better (Remastered 2009).flac",
+            "expected": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-04 Getting Better (Remastered 2009)",
+            "predicted": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.00843073623283408
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-13 Breathe In Breathe Out.flac",
+            "expected": "Kanye West - The College Dropout - 01-13 Breathe In Breathe Out",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-01 ...And the Gods Made Love",
+            "score": 0.006616961561829338
+          },
+          {
+            "file": "Prince - Sign O' The Times - 02-02 If I Was Your Girlfriend (2020 Remaster).flac",
+            "expected": "Prince - Sign O' The Times - 02-02 If I Was Your Girlfriend (2020 Remaster)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-10 Temporary Like Achilles",
+            "score": 0.01409158887537909
+          },
+          {
+            "file": "Drake - Take Care (Deluxe) - 01-15 Look What You've Done.flac",
+            "expected": "Drake - Take Care (Deluxe) - 01-15 Look What You've Done",
+            "predicted": "The Beatles - Abbey Road (Remastered) - 01-06 I Want You (She's So Heavy) (Remastered 2009)",
+            "score": 0.0055061472342397
+          },
+          {
+            "file": "James Brown - Star Time - 01-21 Maybe The Last Time.flac",
+            "expected": "James Brown - Star Time - 01-21 Maybe The Last Time",
+            "predicted": "Radiohead - Kid A - 01-02 Kid A",
+            "score": 0.008745667714630478
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-09 Method Man.flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-09 Method Man",
+            "predicted": "The Doors - The Doors - 01-03 The Crystal Ship",
+            "score": 0.024638883114943444
+          },
+          {
+            "file": "Neil Young - Harvest - 01-03 A Man Needs a Maid (2009 Remaster).flac",
+            "expected": "Neil Young - Harvest - 01-03 A Man Needs a Maid (2009 Remaster)",
+            "predicted": "D'Angelo - Voodoo - 01-10 Feel Like Makin' Love",
+            "score": 0.0044195804534583605
+          },
+          {
+            "file": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-07 Explain It To Me (2018 Remaster).flac",
+            "expected": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-07 Explain It To Me (2018 Remaster)",
+            "predicted": "Miles Davis - Bitches Brew - 01-02 Bitches Brew (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.015199499517316584
+          },
+          {
+            "file": "The Beatles - Abbey Road (Remastered) - 01-04 Oh! Darling (Remastered 2009).flac",
+            "expected": "The Beatles - Abbey Road (Remastered) - 01-04 Oh! Darling (Remastered 2009)",
+            "predicted": "The Beatles - Sgt. Pepper's Lonely Hearts Club Band (Remastered) - 01-10 Lovely Rita (Remastered 2009)",
+            "score": 0.0024287969687371014
+          },
+          {
+            "file": "Bob Dylan - Blonde On Blonde - 01-04 One of Us Must Know (Sooner or Later).flac",
+            "expected": "Bob Dylan - Blonde On Blonde - 01-04 One of Us Must Know (Sooner or Later)",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-10 The Black Angel's Death Song",
+            "score": 0.0049836641512236435
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version).flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-13 Protect Ya Neck (Shao Lin Version)",
+            "predicted": "Sly & The Family Stone - There's a Riot Goin' On - 01-02 Just Like a Baby",
+            "score": 0.005534871123309304
+          },
+          {
+            "file": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-06 You Can Call Me Al.flac",
+            "expected": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-06 You Can Call Me Al",
+            "predicted": "Frank Ocean - Blonde - 01-09 Nights-2",
+            "score": 0.0009846952961988231
+          },
+          {
+            "file": "The Beatles - Revolver (Remastered) - 01-14 Tomorrow Never Knows (Remastered 2009).flac",
+            "expected": "The Beatles - Revolver (Remastered) - 01-14 Tomorrow Never Knows (Remastered 2009)",
+            "predicted": "Bob Dylan - Blood On The Tracks - 01-03 You're a Big Girl Now",
+            "score": 0.0009786613430148305
+          },
+          {
+            "file": "Marvin Gaye - What's Going On - 01-12 What's Going On (Mono Single Version).flac",
+            "expected": "Marvin Gaye - What's Going On - 01-12 What's Going On (Mono Single Version)",
+            "predicted": "Miles Davis - Bitches Brew - 02-04 Sanctuary (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.00842497641215123
+          },
+          {
+            "file": "The Band - The Band - 01-02 Rag Mama Rag.flac",
+            "expected": "The Band - The Band - 01-02 Rag Mama Rag",
+            "predicted": "Missy Elliott - Supa Dupa Fly - 01-05 Beep Me 911 (feat. 702)",
+            "score": 0.003667732815546554
+          },
+          {
+            "file": "Radiohead - Kid A - 01-09 Morning Bell.flac",
+            "expected": "Radiohead - Kid A - 01-09 Morning Bell",
+            "predicted": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.004428226105913313
+          },
+          {
+            "file": "Fleetwood Mac - Rumours - 01-01 Second Hand News (2001 Remaster).flac",
+            "expected": "Fleetwood Mac - Rumours - 01-01 Second Hand News (2001 Remaster)",
+            "predicted": "The Doors - The Doors - 01-11 The End",
+            "score": 0.0036796273018363523
+          },
+          {
+            "file": "Bob Dylan - Blood On The Tracks - 01-09 Shelter from the Storm.flac",
+            "expected": "Bob Dylan - Blood On The Tracks - 01-09 Shelter from the Storm",
+            "predicted": "Miles Davis - Bitches Brew - 02-03 Miles Runs the Voodoo Down (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.004754385539747941
+          },
+          {
+            "file": "The Who - Who's Next - 01-02 Bargain.flac",
+            "expected": "The Who - Who's Next - 01-02 Bargain",
+            "predicted": "Dusty Springfield - Dusty In Memphis - 01-09 In the Land of Make Believe",
+            "score": 0.011856591506073322
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-05 No Angel.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-05 No Angel",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-16 Voodoo Child (Slight Return)",
+            "score": 0.0046669943865644825
+          },
+          {
+            "file": "The Beatles - Abbey Road (Remastered) - 01-03 Maxwell's Silver Hammer (Remastered 2009).flac",
+            "expected": "The Beatles - Abbey Road (Remastered) - 01-03 Maxwell's Silver Hammer (Remastered 2009)",
+            "predicted": "James Brown - Star Time - 01-17 Devil's Den",
+            "score": 0.0033454610481653546
+          },
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-17 Red House.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-17 Red House",
+            "predicted": "Miles Davis - Kind Of Blue - 01-04 All Blues (feat. John Coltrane, Cannonball Adderley & Bill Evans)",
+            "score": 0.036488292029813074
+          },
+          {
+            "file": "Bob Dylan - Blood On The Tracks - 01-01 Tangled up in Blue.flac",
+            "expected": "Bob Dylan - Blood On The Tracks - 01-01 Tangled up in Blue",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-14 Sad-Eyed Lady of the Lowlands",
+            "score": 0.011518120559934397
+          },
+          {
+            "file": "David Bowie - Hunky Dory (2015 Remaster) - 01-01 Changes (2015 Remaster).flac",
+            "expected": "David Bowie - Hunky Dory (2015 Remaster) - 01-01 Changes (2015 Remaster)",
+            "predicted": "Prince - Purple Rain - 01-09 Purple Rain",
+            "score": 0.0029369503559396604
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-09 Prophets Of Rage (Power Version).flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-09 Prophets Of Rage (Power Version)",
+            "predicted": "Outkast - Stankonia - 01-08 Spaghetti Junction",
+            "score": 0.001990052877920756
+          },
+          {
+            "file": "Carole King - Tapestry - 01-04 Home Again.flac",
+            "expected": "Carole King - Tapestry - 01-04 Home Again",
+            "predicted": "Carole King - Tapestry - 01-10 Smackwater Jack",
+            "score": 0.003217640378124109
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-05 Tumbling Dice.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-05 Tumbling Dice",
+            "predicted": "Sly & The Family Stone - There's a Riot Goin' On - 01-12 Thank You for Talkin' to Me, Africa",
+            "score": 0.0025388278896282257
+          },
+          {
+            "file": "Eric B. & Rakim - Paid In Full - 01-07 As The Rhyme Goes On.flac",
+            "expected": "Eric B. & Rakim - Paid In Full - 01-07 As The Rhyme Goes On",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-14 All Around the World or the Myth of Fingerprints (Early Version)",
+            "score": 0.00557584123313315
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-16 School Spirit Skit 2.flac",
+            "expected": "Kanye West - The College Dropout - 01-16 School Spirit Skit 2",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-11 1983...(A Merman I Should Turn to Be)",
+            "score": 0.0288573737181107
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-01 Busta's Intro (feat. Busta Rhymes).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-01 Busta's Intro (feat. Busta Rhymes)",
+            "predicted": "Jimi Hendrix - Are You Experienced - 01-08 Fire",
+            "score": 0.0032418061742061077
+          },
+          {
+            "file": "R.E.M. - Automatic For The People - 01-08 Ignoreland.flac",
+            "expected": "R.E.M. - Automatic For The People - 01-08 Ignoreland",
+            "predicted": "D'Angelo - Voodoo - 01-13 Africa",
+            "score": 0.008176413020138718
+          },
+          {
+            "file": "AC_DC - Back In Black - 01-10 Rock and Roll Ain't Noise Pollution.flac",
+            "expected": "AC_DC - Back In Black - 01-10 Rock and Roll Ain't Noise Pollution",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-15 All Down The Line",
+            "score": 0.0017721736008196043
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-09 Get Em High.flac",
+            "expected": "Kanye West - The College Dropout - 01-09 Get Em High",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-11 1983...(A Merman I Should Turn to Be)",
+            "score": 0.007725389513496883
+          },
+          {
+            "file": "Beyonc\u00e9 - LEMONADE - 01-05 6 INCH.flac",
+            "expected": "Beyonc\u00e9 - LEMONADE - 01-05 6 INCH",
+            "predicted": "Liz Phair - Exile In Guyville (2018 Remaster) - 01-15 Johnny Sunshine (2018 Remaster)",
+            "score": 0.0028266966805993166
+          },
+          {
+            "file": "A Tribe Called Quest - The Low End Theory - 01-11 Jazz (We've Got).flac",
+            "expected": "A Tribe Called Quest - The Low End Theory - 01-11 Jazz (We've Got)",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-11 European Son",
+            "score": 0.023776604862605244
+          },
+          {
+            "file": "Nirvana - Nevermind - 01-12 Something In The Way.flac",
+            "expected": "Nirvana - Nevermind - 01-12 Something In The Way",
+            "predicted": "JAY Z - The Blueprint (Explicit Version) - 01-06 U Don't Know",
+            "score": 0.00478652406773572
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-13 Why You Hurt Me.flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-13 Why You Hurt Me",
+            "predicted": "Bob Dylan - Blood On The Tracks - 01-04 Idiot Wind",
+            "score": 0.013676634189537018
+          },
+          {
+            "file": "Kendrick Lamar - To Pimp A Butterfly - 01-13 The Blacker The Berry.flac",
+            "expected": "Kendrick Lamar - To Pimp A Butterfly - 01-13 The Blacker The Berry",
+            "predicted": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-03 Ex-Factor",
+            "score": 0.0010529843187447874
+          },
+          {
+            "file": "Carole King - Tapestry - 01-12 (You Make Me Feel Like) A Natural Woman.flac",
+            "expected": "Carole King - Tapestry - 01-12 (You Make Me Feel Like) A Natural Woman",
+            "predicted": "Pink Floyd - The Dark Side of the Moon - 01-02 Breathe (In the Air)",
+            "score": 0.009620040779303118
+          },
+          {
+            "file": "Joni Mitchell - Blue - 01-10 The Last Time I Saw Richard.flac",
+            "expected": "Joni Mitchell - Blue - 01-10 The Last Time I Saw Richard",
+            "predicted": "Bob Marley & The Wailers - Exodus - 01-01 Natural Mystic",
+            "score": 0.0012558181748312247
+          },
+          {
+            "file": "JAY Z - The Blueprint (Explicit Version) - 01-09 Never Change.flac",
+            "expected": "JAY Z - The Blueprint (Explicit Version) - 01-09 Never Change",
+            "predicted": "Radiohead - Kid A - 01-06 Optimistic",
+            "score": 0.002179190447666235
+          },
+          {
+            "file": "The Who - Who's Next - 01-13 Water (Live).flac",
+            "expected": "The Who - Who's Next - 01-13 Water (Live)",
+            "predicted": "Miles Davis - Bitches Brew - 02-03 Miles Runs the Voodoo Down (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.0015454529314773424
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-08 Bite Our Style (Interlude).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-08 Bite Our Style (Interlude)",
+            "predicted": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-12 Black Steel In The Hour Of Chaos",
+            "score": 0.0013980644470297232
+          },
+          {
+            "file": "Pink Floyd - The Dark Side of the Moon - 01-03 On the Run.flac",
+            "expected": "Pink Floyd - The Dark Side of the Moon - 01-03 On the Run",
+            "predicted": "Joni Mitchell - Blue - 01-06 California",
+            "score": 0.012322761330249676
+          },
+          {
+            "file": "A Tribe Called Quest - The Low End Theory - 01-10 Everything Is Fair.flac",
+            "expected": "A Tribe Called Quest - The Low End Theory - 01-10 Everything Is Fair",
+            "predicted": "Paul Simon - Graceland (25th Anniversary Deluxe Edition) - 01-01 The Boy In the Bubble",
+            "score": 0.0037928621796530226
+          },
+          {
+            "file": "Fleetwood Mac - Rumours - 01-05 Go Your Own Way (2001 Remaster).flac",
+            "expected": "Fleetwood Mac - Rumours - 01-05 Go Your Own Way (2001 Remaster)",
+            "predicted": "Radiohead - OK Computer - 01-12 The Tourist-2",
+            "score": 0.011690604933055404
+          },
+          {
+            "file": "Miles Davis - Kind Of Blue - 01-05 Flamenco Sketches (feat. John Coltrane, Cannonball Adderley & Bill Evans).flac",
+            "expected": "Miles Davis - Kind Of Blue - 01-05 Flamenco Sketches (feat. John Coltrane, Cannonball Adderley & Bill Evans)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-04 One of Us Must Know (Sooner or Later)",
+            "score": 0.007644701907636664
+          },
+          {
+            "file": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-01 Intro (2005 Remaster).flac",
+            "expected": "The Notorious B.I.G. - Ready to Die (The Remaster) [2015 Remaster] - 01-01 Intro (2005 Remaster)",
+            "predicted": "Jimi Hendrix - Axis_ Bold As Love - 01-06 Little Wing",
+            "score": 0.0012788048141861852
+          },
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-18 Revolution Rock (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-18 Revolution Rock (Remastered)",
+            "predicted": "JAY Z - The Blueprint (Explicit Version) - 01-08 Heart Of The City (Ain't No Love)",
+            "score": 0.005654517160797123
+          },
+          {
+            "file": "Jimi Hendrix - Axis_ Bold As Love - 01-03 Spanish Castle Magic.flac",
+            "expected": "Jimi Hendrix - Axis_ Bold As Love - 01-03 Spanish Castle Magic",
+            "predicted": "Van Morrison - Astral Weeks - 01-06 Madame George (1999 Remaster)",
+            "score": 0.0022264452093310183
+          },
+          {
+            "file": "Stevie Wonder - Innervisions - 01-03 Living For The City.flac",
+            "expected": "Stevie Wonder - Innervisions - 01-03 Living For The City",
+            "predicted": "The Who - Who's Next - 01-08 Behind Blue Eyes",
+            "score": 0.004014314677775244
+          },
+          {
+            "file": "Michael Jackson - Thriller - 01-08 P.Y.T. (Pretty Young Thing).flac",
+            "expected": "Michael Jackson - Thriller - 01-08 P.Y.T. (Pretty Young Thing)",
+            "predicted": "Bob Dylan - Blonde On Blonde - 01-14 Sad-Eyed Lady of the Lowlands",
+            "score": 0.0020990073592724867
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-02 Hit 'Em wit da Hee (feat. Lil' Kim).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-02 Hit 'Em wit da Hee (feat. Lil' Kim)",
+            "predicted": "The Stooges - Funhouse - 01-07 L.A. Blues",
+            "score": 0.00726227743384078
+          },
+          {
+            "file": "JAY Z - The Blueprint (Explicit Version) - 01-11 All I Need.flac",
+            "expected": "JAY Z - The Blueprint (Explicit Version) - 01-11 All I Need",
+            "predicted": "Ramones - Ramones - 01-08 Loudmouth",
+            "score": 0.00963423817161424
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-01 Rocks Off.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-01 Rocks Off",
+            "predicted": "The Beach Boys - Pet Sounds - 01-02 You Still Believe In Me",
+            "score": 0.01734934633619678
+          },
+          {
+            "file": "Nirvana - Nevermind - 01-06 Polly.flac",
+            "expected": "Nirvana - Nevermind - 01-06 Polly",
+            "predicted": "Metallica - Master of Puppets (Remastered) - 01-03 The Thing That Should Not Be (Remastered)",
+            "score": 0.0005111352926975288
+          },
+          {
+            "file": "Radiohead - OK Computer - 01-03 Subterranean Homesick Alien-2.flac",
+            "expected": "Radiohead - OK Computer - 01-03 Subterranean Homesick Alien-2",
+            "predicted": "Kanye West - My Beautiful Dark Twisted Fantasy - 01-09 Runaway",
+            "score": 0.015293204176058728
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-10 Happy.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-10 Happy",
+            "predicted": "Michael Jackson - Off the Wall - 01-07 She's Out of My Life",
+            "score": 0.00309637633989579
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-12 Izzy Izzy Ahh.flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-12 Izzy Izzy Ahh",
+            "predicted": "Stevie Wonder - Talking Book - 01-06 Superstition",
+            "score": 0.010020100814635446
+          },
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-06 Spanish Bombs (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-06 Spanish Bombs (Remastered)",
+            "predicted": "The Clash - London Calling (Remastered) - 01-01 London Calling (Remastered)",
+            "score": 0.005853696055396096
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-11 B Side Wins Again (Original Version).flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 02-11 B Side Wins Again (Original Version)",
+            "predicted": "James Brown - Star Time - 01-06 Good Good Lovin'",
+            "score": 0.004900650701792686
+          },
+          {
+            "file": "Outkast - Aquemini - 01-07 Slump.flac",
+            "expected": "Outkast - Aquemini - 01-07 Slump",
+            "predicted": "N.W.A - Straight Outta Compton - 01-02 Fuck Tha Police",
+            "score": 0.004155728441325057
+          },
+          {
+            "file": "Jimi Hendrix - Are You Experienced - 01-06 I Don't Live Today.flac",
+            "expected": "Jimi Hendrix - Are You Experienced - 01-06 I Don't Live Today",
+            "predicted": "Talking Heads - Remain in Light - 01-03 The Great Curve",
+            "score": 0.0013357782626269854
+          },
+          {
+            "file": "The Clash - London Calling (Remastered) - 01-12 Death or Glory (Remastered).flac",
+            "expected": "The Clash - London Calling (Remastered) - 01-12 Death or Glory (Remastered)",
+            "predicted": "Radiohead - OK Computer - 01-01 Airbag-2",
+            "score": 0.003074738614133321
+          },
+          {
+            "file": "Ramones - Ramones - 01-11 53rd & 3rd.flac",
+            "expected": "Ramones - Ramones - 01-11 53rd & 3rd",
+            "predicted": "Guns N' Roses - Appetite For Destruction - 01-02 It's So Easy",
+            "score": 0.002744057260683941
+          },
+          {
+            "file": "Neil Young - After the Gold Rush (2009 Remaster) - 01-09 When You Dance I Can Really Love.flac",
+            "expected": "Neil Young - After the Gold Rush (2009 Remaster) - 01-09 When You Dance I Can Really Love",
+            "predicted": "Carole King - Tapestry - 01-09 Will You Love Me Tomorrow_",
+            "score": 0.004102249388861279
+          },
+          {
+            "file": "Kanye West - The College Dropout - 01-19 Through The Wire.flac",
+            "expected": "Kanye West - The College Dropout - 01-19 Through The Wire",
+            "predicted": "Jimi Hendrix - Axis_ Bold As Love - 01-11 One Rainy Wish",
+            "score": 0.0018146360809062623
+          },
+          {
+            "file": "JAY Z - The Blueprint (Explicit Version) - 01-01 The Ruler's Back.flac",
+            "expected": "JAY Z - The Blueprint (Explicit Version) - 01-01 The Ruler's Back",
+            "predicted": "Miles Davis - Bitches Brew - 01-02 Bitches Brew (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "score": 0.004012939510449565
+          },
+          {
+            "file": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks).flac",
+            "expected": "Miles Davis - Bitches Brew - 02-01 Spanish Key (feat. Wayne Shorter, Bennie Maupin, John McLaughlin, Chick Corea, Joe Zawinul, Dave Holland & Harvey Brooks)",
+            "predicted": "Jimi Hendrix - Electric Ladyland - 01-14 House Burning Down",
+            "score": 0.004492855704359977
+          },
+          {
+            "file": "Pink Floyd - The Dark Side of the Moon - 01-05 The Great Gig in the Sky.flac",
+            "expected": "Pink Floyd - The Dark Side of the Moon - 01-05 The Great Gig in the Sky",
+            "predicted": "The Doors - The Doors - 01-05 Alabama Song (Whisky Bar)",
+            "score": 0.010359503838002881
+          },
+          {
+            "file": "Missy Elliott - Supa Dupa Fly - 01-07 Pass da Blunt (feat. Timbaland).flac",
+            "expected": "Missy Elliott - Supa Dupa Fly - 01-07 Pass da Blunt (feat. Timbaland)",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor",
+            "score": 0.004744835593909813
+          },
+          {
+            "file": "Ms. Lauryn Hill & Mary J. Blige - The Miseducation of Lauryn Hill - 01-09 I Used to Love Him (feat. Mary J. Blige).flac",
+            "expected": "Ms. Lauryn Hill & Mary J. Blige - The Miseducation of Lauryn Hill - 01-09 I Used to Love Him (feat. Mary J. Blige)",
+            "predicted": "Metallica - Master of Puppets (Remastered) - 01-01 Battery (Remastered)",
+            "score": 0.0017781628200156385
+          },
+          {
+            "file": "The Stooges - Funhouse - 01-06 Fun House.flac",
+            "expected": "The Stooges - Funhouse - 01-06 Fun House",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-04 Venus In Furs",
+            "score": 0.010960362792791
+          },
+          {
+            "file": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-05 Can It Be All So Simple _ Intermission.flac",
+            "expected": "Wu-Tang Clan - Enter The Wu-Tang (36 Chambers) [Expanded Edition] - 01-05 Can It Be All So Simple _ Intermission",
+            "predicted": "Jimi Hendrix - Axis_ Bold As Love - 01-06 Little Wing",
+            "score": 0.0041407290021223675
+          },
+          {
+            "file": "Stevie Wonder - Innervisions - 01-01 Too High.flac",
+            "expected": "Stevie Wonder - Innervisions - 01-01 Too High",
+            "predicted": "Led Zeppelin - Led Zeppelin IV (Remaster) - 01-04 Stairway to Heaven (Remaster)",
+            "score": 0.0025300922013337113
+          },
+          {
+            "file": "James Brown - Star Time - 04-14 It's Too Funky In Here.flac",
+            "expected": "James Brown - Star Time - 04-14 It's Too Funky In Here",
+            "predicted": "The Velvet Underground - The Velvet Underground & Nico (45th Anniversary) - 01-01 Sunday Morning",
+            "score": 0.001643374074333015
+          },
+          {
+            "file": "Fleetwood Mac - Rumours - 01-10 Oh Daddy (2001 Remaster).flac",
+            "expected": "Fleetwood Mac - Rumours - 01-10 Oh Daddy (2001 Remaster)",
+            "predicted": "Outkast - Aquemini - 01-12 SpottieOttieDopaliscious",
+            "score": 0.004722358877853328
+          },
+          {
+            "file": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-05 Doo Wop (That Thing).flac",
+            "expected": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-05 Doo Wop (That Thing)",
+            "predicted": "The Beatles - Revolver (Remastered) - 01-09 And Your Bird Can Sing (Remastered 2009)",
+            "score": 0.015125609705673781
+          },
+          {
+            "file": "Pink Floyd - The Dark Side of the Moon - 01-08 Any Colour You Like.flac",
+            "expected": "Pink Floyd - The Dark Side of the Moon - 01-08 Any Colour You Like",
+            "predicted": "James Brown - Star Time - 03-02 Funky Drummer (Pts.1 & 2 _ Edit)",
+            "score": 0.0012871553675046776
+          },
+          {
+            "file": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor.flac",
+            "expected": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-18 Soul Survivor",
+            "predicted": "The Beach Boys - Pet Sounds - 01-02 You Still Believe In Me",
+            "score": 0.0033895138180036755
+          },
+          {
+            "file": "A Tribe Called Quest - The Low End Theory - 01-04 Butter.flac",
+            "expected": "A Tribe Called Quest - The Low End Theory - 01-04 Butter",
+            "predicted": "The Rolling Stones - Exile On Main Street (2010 Re-Mastered) - 01-15 All Down The Line",
+            "score": 0.0082777054637041
+          },
+          {
+            "file": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-02 Lost Ones.flac",
+            "expected": "Ms. Lauryn Hill - The Miseducation of Lauryn Hill - 01-02 Lost Ones",
+            "predicted": "Miles Davis - Kind Of Blue - 01-01 So What (feat. John Coltrane, Cannonball Adderley & Bill Evans)",
+            "score": 0.0021261689950922147
+          },
+          {
+            "file": "Michael Jackson - Off the Wall - 01-07 She's Out of My Life.flac",
+            "expected": "Michael Jackson - Off the Wall - 01-07 She's Out of My Life",
+            "predicted": "Prince - Sign O' The Times - 01-09 Forever In My Life (2020 Remaster)",
+            "score": 0.005259165114515629
+          },
+          {
+            "file": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-07 Louder Than A Bomb.flac",
+            "expected": "Public Enemy - It Takes A Nation Of Millions To Hold Us Back (Deluxe Edition) - 01-07 Louder Than A Bomb",
+            "predicted": "D'Angelo - Voodoo - 01-07 One Mo'Gin",
+            "score": 0.0037492314996686593
+          },
+          {
+            "file": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow.flac",
+            "expected": "Beyonce\u0301 - BEYONCE\u0301 [Platinum Edition] - 01-04 Blow",
+            "predicted": "Joni Mitchell - Blue - 01-08 River",
+            "score": 0.0039151634629898124
+          },
+          {
+            "file": "D'Angelo - Voodoo - 01-03 Left And Right.flac",
+            "expected": "D'Angelo - Voodoo - 01-03 Left And Right",
+            "predicted": "Sex Pistols - Never Mind The Bollocks, Here's The Sex Pistols - 01-12 EMI",
+            "score": 0.0015807245621674015
+          }
+        ],
+        "avg_timings_per_step": {
+          "load_audio": 0.4547139287181199,
+          "Extract spectrogram": 0.0010063239336013793,
+          "Find peaks": 0.004587720822542906,
+          "Build hashes": 0.09921756756678224,
+          "Sample hashes": 0.013169610321521759,
+          "Hash matching and voting": 0.28462843419983985,
+          "Scoring preparation": 0.0012169990465044976,
+          "Softmax scoring": 0.00020805350691080094,
+          "Lookup": 8.933153003454208e-06,
+          "total": 0.8618024819158018
+        }
+      }
+    },
+    "timings": {
+      "clean_10s": {
+        "load_audio": 0.8074831803962589,
+        "Extract spectrogram": 0.002161238081753254,
+        "Find peaks": 0.004611774202436208,
+        "Build hashes": 0.09853256164118647,
+        "Sample hashes": 0.013304966311901808,
+        "Hash matching and voting": 0.3360246400386095,
+        "Scoring preparation": 0.0012920842468738555,
+        "Softmax scoring": 0.00021765996888279914,
+        "Lookup": 9.123831987380981e-06,
+        "total": 1.2669996415413916
+      },
+      "clean_5s": {
+        "load_audio": 0.5427868810556828,
+        "Extract spectrogram": 0.000745560199022293,
+        "Find peaks": 0.0023358421474695204,
+        "Build hashes": 0.048734516214579346,
+        "Sample hashes": 0.006684053279459476,
+        "Hash matching and voting": 0.19505148741975425,
+        "Scoring preparation": 0.0010527483969926834,
+        "Softmax scoring": 0.0005252566114068031,
+        "Lookup": 8.660543709993363e-06,
+        "total": 0.7996006721705198
+      },
+      "clean_3s": {
+        "load_audio": 0.46407141362130644,
+        "Extract spectrogram": 0.0006394900009036064,
+        "Find peaks": 0.0014353460185229777,
+        "Build hashes": 0.028455512668937446,
+        "Sample hashes": 0.002813652951270342,
+        "Hash matching and voting": 0.14636487352848054,
+        "Scoring preparation": 0.0009253403805196285,
+        "Softmax scoring": 0.00020379174500703812,
+        "Lookup": 8.291866630315781e-06,
+        "total": 0.6462999290153384
+      },
+      "snr_10db": {
+        "load_audio": 0.4840714831165969,
+        "Extract spectrogram": 0.0010713319480419158,
+        "Find peaks": 0.004592285342514515,
+        "Build hashes": 0.09931114218011498,
+        "Sample hashes": 0.013215785209089517,
+        "Hash matching and voting": 0.3262781759314239,
+        "Scoring preparation": 0.001294633336365223,
+        "Softmax scoring": 0.0002102518416941166,
+        "Lookup": 8.870065212249756e-06,
+        "total": 0.9333712010793388
+      },
+      "snr_5db": {
+        "load_audio": 0.4628992414921522,
+        "Extract spectrogram": 0.0010674231871962547,
+        "Find peaks": 0.0045914996936917305,
+        "Build hashes": 0.09915037419646978,
+        "Sample hashes": 0.013187998369336129,
+        "Hash matching and voting": 0.3158274259418249,
+        "Scoring preparation": 0.0012862363867461681,
+        "Softmax scoring": 0.00020887844637036324,
+        "Lookup": 8.89042392373085e-06,
+        "total": 0.9014617749117315
+      },
+      "snr_0db": {
+        "load_audio": 0.44694274897128344,
+        "Extract spectrogram": 0.001064401164650917,
+        "Find peaks": 0.004589909482747317,
+        "Build hashes": 0.09913409353420138,
+        "Sample hashes": 0.013236353311687708,
+        "Hash matching and voting": 0.3001847560852766,
+        "Scoring preparation": 0.0012550401724874974,
+        "Softmax scoring": 0.0002151591032743454,
+        "Lookup": 8.910391479730605e-06,
+        "total": 0.8697635816857219
+      },
+      "ir_10s": {
+        "load_audio": 0.45761347787454726,
+        "Extract spectrogram": 0.0009597556143999099,
+        "Find peaks": 0.004574127424508333,
+        "Build hashes": 0.09927793788909912,
+        "Sample hashes": 0.01294333952665329,
+        "Hash matching and voting": 0.3232938447147608,
+        "Scoring preparation": 0.0012988172508776189,
+        "Softmax scoring": 0.0002080620191991329,
+        "Lookup": 9.265191853046418e-06,
+        "total": 0.9033683231547475
+      },
+      "ir_snr_5db": {
+        "load_audio": 0.4547139287181199,
+        "Extract spectrogram": 0.0010063239336013793,
+        "Find peaks": 0.004587720822542906,
+        "Build hashes": 0.09921756756678224,
+        "Sample hashes": 0.013169610321521759,
+        "Hash matching and voting": 0.28462843419983985,
+        "Scoring preparation": 0.0012169990465044976,
+        "Softmax scoring": 0.00020805350691080094,
+        "Lookup": 8.933153003454208e-06,
+        "total": 0.8618024819158018
+      }
+    }
+  }
+}

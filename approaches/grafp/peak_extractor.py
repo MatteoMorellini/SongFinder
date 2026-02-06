@@ -47,15 +47,11 @@ class GPUPeakExtractorv2(nn.Module):
                     nn.init.constant_(m.bias, 0)
     
     def forward(self, spec):
-        # Normalize spectrogram
         min_v = spec.amin(dim=(1, 2), keepdim=True)
         max_v = spec.amax(dim=(1, 2), keepdim=True)
         spec = (spec - min_v) / (max_v - min_v + 1e-8)
-        
-        # Add channel dimension
         spec = spec.unsqueeze(1)
-        
-        # Get positional encodings for this batch size
+
         B, _, H, W = spec.shape
         if B != self.T_pos.shape[0] or H != self.T_pos.shape[1] or W != self.T_pos.shape[2]:
             T_pos = torch.linspace(0, 1, steps=W, device=spec.device).view(1, 1, W).expand(B, H, -1)
@@ -64,11 +60,6 @@ class GPUPeakExtractorv2(nn.Module):
             T_pos = self.T_pos[:B]
             F_pos = self.F_pos[:B]
         
-        # Concatenate: [time_pos, freq_pos, spectrogram]
         x = torch.cat([T_pos.unsqueeze(1), F_pos.unsqueeze(1), spec], dim=1)
-        
-        # Apply convolution
         x = self.conv(x)
-        
-        # Reshape to (B, C, N) where N = H*W
         return x.reshape(x.shape[0], x.shape[1], -1)
